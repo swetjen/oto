@@ -344,7 +344,9 @@ func (p *Parser) parseObject(pkg *packages.Package, o types.Object, v *types.Str
 		if err != nil {
 			return errors.Wrap(err, "parse field tag")
 		}
-		obj.Fields = append(obj.Fields, field)
+		if !strings.Contains(field.Tag, "-") {
+			obj.Fields = append(obj.Fields, field)
+		}
 	}
 	p.def.Objects = append(p.def.Objects, obj)
 	p.objects[obj.Name] = struct{}{}
