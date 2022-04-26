@@ -9,9 +9,9 @@ import (
 	"strings"
 
 	"github.com/dustin/go-humanize"
-	"github.com/pacedotdev/oto/parser"
-	"github.com/pacedotdev/oto/render"
 	"github.com/pkg/errors"
+	"github.com/swetjen/oto/parser"
+	"github.com/swetjen/oto/render"
 )
 
 // Version is set during build.

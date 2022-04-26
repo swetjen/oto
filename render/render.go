@@ -9,8 +9,8 @@ import (
 
 	"github.com/fatih/structtag"
 	"github.com/gobuffalo/plush"
-	"github.com/pacedotdev/oto/parser"
 	"github.com/pkg/errors"
+	"github.com/swetjen/oto/parser"
 )
 
 // Render renders the template using the Definition.
