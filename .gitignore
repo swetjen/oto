@@ -16,3 +16,4 @@ oto
 .DS_Store
 dist
 example/swift/SwiftCLIExample/SwiftCLIExample.xcodeproj/project.xcworkspace/xcuserdata/
+/.idea/
