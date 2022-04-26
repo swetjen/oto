@@ -161,6 +161,7 @@ func (f FieldType) IsOptional() bool {
 type Parser struct {
 	Verbose bool
 
+	ExcludeFields     []string
 	ExcludeInterfaces []string
 
 	patterns []string
@@ -344,7 +345,7 @@ func (p *Parser) parseObject(pkg *packages.Package, o types.Object, v *types.Str
 		if err != nil {
 			return errors.Wrap(err, "parse field tag")
 		}
-		if !strings.Contains(field.Tag, "-") {
+		if !isInSlice(p.ExcludeFields, field.Tag) {
 			obj.Fields = append(obj.Fields, field)
 		}
 	}

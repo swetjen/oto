@@ -34,12 +34,13 @@ flags:`)
 		flags.PrintDefaults()
 	}
 	var (
-		template   = flags.String("template", "", "plush template to render")
-		outfile    = flags.String("out", "", "output file (default: stdout)")
-		pkg        = flags.String("pkg", "", "explicit package name (default: inferred)")
-		v          = flags.Bool("v", false, "verbose output")
-		paramsStr  = flags.String("params", "", "list of parameters in the format: \"key:value,key:value\"")
-		ignoreList = flags.String("ignore", "", "comma separated list of interfaces to ignore")
+		template      = flags.String("template", "", "plush template to render")
+		outfile       = flags.String("out", "", "output file (default: stdout)")
+		pkg           = flags.String("pkg", "", "explicit package name (default: inferred)")
+		v             = flags.Bool("v", false, "verbose output")
+		paramsStr     = flags.String("params", "", "list of parameters in the format: \"key:value,key:value\"")
+		ignoreListIn  = flags.String("ignore", "", "comma separated list of interfaces to ignore")
+		ignoreFieldIn = flags.String("fields", "", "comma separated list of fields to ignore")
 	)
 	if err := flags.Parse(args[1:]); err != nil {
 		return err
@@ -54,9 +55,13 @@ flags:`)
 		return errors.Wrap(err, "params")
 	}
 	p := parser.New(flags.Args()...)
-	ignoreItems := strings.Split(*ignoreList, ",")
+	ignoreItems := strings.Split(*ignoreListIn, ",")
 	if ignoreItems[0] != "" {
 		p.ExcludeInterfaces = ignoreItems
+	}
+	ignoreFields := strings.Split(*ignoreFieldIn, ",")
+	if ignoreFields[0] != "" {
+		p.ExcludeFields = ignoreFields
 	}
 	p.Verbose = *v
 	if p.Verbose {
