@@ -466,6 +466,10 @@ func (p *Parser) parseFieldType(pkg *packages.Package, obj types.Object) (FieldT
 			ftype.JSType = "string"
 			ftype.SwiftType = "String"
 			ftype.TSType = "string"
+		case "primitive.ObjectID":
+			ftype.JSType = "string"
+			ftype.SwiftType = "String"
+			ftype.TSType = "string"
 		case "bool":
 			ftype.JSType = "boolean"
 			ftype.SwiftType = "Bool"
