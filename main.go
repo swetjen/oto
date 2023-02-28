@@ -65,7 +65,7 @@ flags:`)
 	}
 	p.Verbose = *v
 	if p.Verbose {
-		fmt.Println("oto - github.com/pacedotdev/oto", Version)
+		fmt.Println("oto - github.com/swetjen/oto", Version)
 	}
 	def, err := p.Parse()
 	if err != nil {
