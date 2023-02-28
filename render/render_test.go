@@ -32,7 +32,7 @@ package <%= def.PackageName %>`
 	}
 }
 
-// TestRenderCommentsWithQuotes addresses https://github.com/swetjen/oto/issues/17.
+// TestRenderCommentsWithQuotes addresses https://github.com/pacedotdev/oto/issues/17.
 func TestRenderCommentsWithQuotes(t *testing.T) {
 	is := is.New(t)
 	def := parser.Definition{

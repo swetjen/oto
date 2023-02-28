@@ -1,7 +1,7 @@
 package pleasantries
 
 import (
-	"github.com/swetjen/oto/testdata/services"
+	"github.com/pacedotdev/oto/testdata/services"
 )
 
 // GreeterService is a polite API.

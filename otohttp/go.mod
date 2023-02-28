@@ -1,4 +1,4 @@
-module github.com/swetjen/oto/otohttp
+module github.com/pacedotdev/oto/otohttp
 
 go 1.13
 
