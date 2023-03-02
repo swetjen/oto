@@ -6,8 +6,6 @@ import (
 	"io"
 	"log"
 	"net/http"
-
-	"github.com/pacedotdev/oto/otohttp"
 )
 
 //go:generate ./generate.sh
@@ -34,7 +32,8 @@ func main() {
 
 // statusCodeHandler is useful for testing the server by returning a
 // specific HTTP status code.
-//  http.Handle("/", statusCodeHandler(http.StatusInternalServerError))
+//
+//	http.Handle("/", statusCodeHandler(http.StatusInternalServerError))
 type statusCodeHandler int
 
 func (c statusCodeHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
