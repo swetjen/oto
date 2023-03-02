@@ -4,9 +4,9 @@
     <option name="autoReloadType" value="ALL" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="75e7ab28-e4da-4eca-8c97-983934be8909" name="Changes" comment="Experiment">
+    <list default="true" id="75e7ab28-e4da-4eca-8c97-983934be8909" name="Changes" comment="See if this allows replacement">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/example/go.mod" beforeDir="false" afterPath="$PROJECT_DIR$/example/go.mod" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/example/go.mod" beforeDir="false" />
       <change beforePath="$PROJECT_DIR$/example/main.go" beforeDir="false" afterPath="$PROJECT_DIR$/example/main.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/example/server.gen.go" beforeDir="false" afterPath="$PROJECT_DIR$/example/server.gen.go" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/example/server.go.plush" beforeDir="false" afterPath="$PROJECT_DIR$/example/server.go.plush" afterDir="false" />
@@ -116,7 +116,8 @@
     <MESSAGE value="Exclude fields wip" />
     <MESSAGE value="Revert &quot;Experiment&quot;&#10;&#10;This reverts commit 513cde56a6b11f80790028c1877d4c50502757d8." />
     <MESSAGE value="Experiment" />
-    <option name="LAST_COMMIT_MESSAGE" value="Experiment" />
+    <MESSAGE value="See if this allows replacement" />
+    <option name="LAST_COMMIT_MESSAGE" value="See if this allows replacement" />
   </component>
   <component name="VgoProject">
     <settings-migrated>true</settings-migrated>
