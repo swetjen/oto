@@ -14,9 +14,9 @@ echo "generated server.gen.go"
 	./def
 echo "generated client.gen.js"
 
-../oto -template client.swift.plush \
-	-out ./swift/SwiftCLIExample/SwiftCLIExample/client.gen.swift \
-	-pkg main \
-	-type-map ./type-mapping.yaml \
-	./def
-echo "generated client.gen.swift"
+#../oto -template client.swift.plush \
+#	-out ./swift/SwiftCLIExample/SwiftCLIExample/client.gen.swift \
+#	-pkg main \
+#	-type-map ./type-mapping.yaml \
+#	./def
+#echo "generated client.gen.swift"

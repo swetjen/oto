@@ -57,6 +57,4 @@ type GreetRequest struct {
 type GreetResponse struct {
 	// Greeting is a nice message welcoming somebody.
 	Greeting string `json:"greeting"`
-	// Error is string explaining what went wrong. Empty if everything was fine.
-	Error string `json:"error,omitempty"`
 }

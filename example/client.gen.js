@@ -17,12 +17,25 @@ class GreeterService {
 			headers: headers,
 			body: JSON.stringify(greetRequest)
 		})
-		return response.json().then((json) => {
-			if (json.error) {
+		const text = await response.text()
+		let json = null
+		if (text) {
+			try {
+				json = JSON.parse(text)
+			} catch (e) {
+				if (!response.ok) {
+					throw new Error(`GreeterService.Greet: ${response.status} ${response.statusText}`)
+				}
+				throw e
+			}
+		}
+		if (!response.ok) {
+			if (json && json.error) {
 				throw new Error(json.error)
 			}
-			return json
-		})
+			throw new Error(`GreeterService.Greet: ${response.status} ${response.statusText}`)
+		}
+		return json || {}
 	}
 	
 }

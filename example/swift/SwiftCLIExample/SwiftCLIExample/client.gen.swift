@@ -45,20 +45,22 @@ class GreeterService {
                     return
                 }
             }
+			guard let responseData = data, responseData.count > 0 else {
+				completion(GreetResponse(), nil)
+				return
+			}
+			if let responseText = String(data: responseData, encoding: .utf8)?.trimmingCharacters(in: .whitespacesAndNewlines),
+			   responseText == "null" || responseText == "" {
+				completion(GreetResponse(), nil)
+				return
+			}
 			var greetResponse: GreetResponse
 			do {
-				greetResponse = try JSONDecoder().decode(GreetResponse.self, from: data!)
+				greetResponse = try JSONDecoder().decode(GreetResponse.self, from: responseData)
 			} catch let err {
 				completion(nil, err)
 				return
 			}
-            if let serviceErr = greetResponse.error {
-                if (serviceErr != "") {
-                    let err = OtoError(serviceErr)
-                        completion(nil, err)
-                        return
-                }
-            }
 			completion(greetResponse, nil)
 		}
 		task.resume()
@@ -81,9 +83,6 @@ struct GreetResponse: Encodable, Decodable {
 
 	// Greeting is a nice message welcoming somebody.
 	var greeting: String?
-
-	// Error is string explaining what went wrong. Empty if everything was fine.
-	var error: String?
 
 }
 
