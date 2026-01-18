@@ -201,6 +201,11 @@ type Parser struct {
 
 	PackageName string
 
+	// TypeOverrides maps Go type names to their target language type overrides.
+	// Keys can be either the clean type name (e.g., "uuid.UUID") or the full
+	// package path (e.g., "github.com/google/uuid.UUID").
+	TypeOverrides map[string]TypeOverride
+
 	patterns []string
 	def      Definition
 
@@ -545,6 +550,30 @@ func (p *Parser) parseFieldType(pkg *packages.Package, obj types.Object) (FieldT
 			ftype.SwiftType = "Double"
 			ftype.TSType = "number"
 			ftype.DartType = "double"
+		}
+	}
+
+	// Apply type overrides if configured.
+	// Check both the full package path and the clean object name.
+	if p.TypeOverrides != nil {
+		fullPath := pkgPath + "." + ftype.CleanObjectName
+		override, found := p.TypeOverrides[fullPath]
+		if !found {
+			override, found = p.TypeOverrides[ftype.CleanObjectName]
+		}
+		if found {
+			if override.JSType != "" {
+				ftype.JSType = override.JSType
+			}
+			if override.TSType != "" {
+				ftype.TSType = override.TSType
+			}
+			if override.SwiftType != "" {
+				ftype.SwiftType = override.SwiftType
+			}
+			if override.DartType != "" {
+				ftype.DartType = override.DartType
+			}
 		}
 	}
 

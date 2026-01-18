@@ -9,6 +9,7 @@ require (
 	github.com/matryer/is v1.4.0
 	github.com/pkg/errors v0.9.1
 	golang.org/x/tools v0.41.0
+	gopkg.in/yaml.v3 v3.0.1
 )
 
 require (

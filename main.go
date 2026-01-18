@@ -42,6 +42,7 @@ flags:`)
 		ignoreList         = flags.String("ignore", "", "comma separated list of interfaces to ignore")
 		ignoreFieldList    = flags.String("fields", "", "comma separated list of fields to ignore")
 		suppressErrorField = flags.Bool("suppressErrorField", false, "suppress error field in response")
+		typesConfig        = flags.String("types", "", "path to types.yaml config file for type overrides")
 	)
 	if err := flags.Parse(args[1:]); err != nil {
 		return err
@@ -57,6 +58,13 @@ flags:`)
 	}
 	p := parser.New(flags.Args()...)
 	p.SuppressErrorField = *suppressErrorField
+	if *typesConfig != "" {
+		cfg, err := parser.LoadTypesConfig(*typesConfig)
+		if err != nil {
+			return errors.Wrap(err, "load types config")
+		}
+		p.TypeOverrides = cfg.BuildOverrideMap()
+	}
 	ignoreItems := strings.Split(*ignoreList, ",")
 	if ignoreItems[0] != "" {
 		p.ExcludeInterfaces = ignoreItems
