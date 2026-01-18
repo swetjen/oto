@@ -15,6 +15,9 @@ import (
 
 // Render renders the template using the Definition.
 func Render(template string, def parser.Definition, params map[string]interface{}) (string, error) {
+	if err := validateTypeMappings(template, def); err != nil {
+		return "", err
+	}
 	ctx := plush.NewContext()
 	ctx.Set("camelize_down", camelizeDown)
 	ctx.Set("camelize_up", camelizeUp)

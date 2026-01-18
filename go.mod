@@ -8,6 +8,7 @@ require (
 	github.com/gobuffalo/plush v3.8.3+incompatible
 	github.com/matryer/is v1.4.0
 	github.com/pkg/errors v0.9.1
+	gopkg.in/yaml.v2 v2.2.4
 	golang.org/x/tools v0.41.0
 )
 

@@ -89,6 +89,7 @@ oto -template ./templates/client.js.plush \
 ```
 
 - Run `oto -help` for more information about these flags
+    - Use `-type-map` to override Go to language type mappings (see below)
 
 Implement the service in Go:
 
@@ -205,6 +206,42 @@ type GreetRequest struct {
 - The example must be valid JSON
 
 The example is extracted and made available via the `Field.Example` field.
+
+## Type mapping overrides
+
+Oto uses built-in Go-to-language mappings for JS/TS/Swift/Dart. You can override
+or extend those mappings without recompiling by providing a YAML file:
+
+```
+oto \
+    -template ./templates/client.ts.plush \
+    -out ./generated/oto.gen.ts \
+    -type-map ./example/type-mapping.yaml \
+    ./definitions
+```
+
+Example mapping file:
+
+```yaml
+version: "1"
+types:
+  overrides:
+    - go_type: "string"
+      ts_type: "string"
+    - go_type: "map[string]interface{}"
+      js_type: "object"
+      swift_type: "Any"
+    - go_type: "github.com/acme/project/foo.Bar"
+      ts_type: "FooBar"
+```
+
+- `go_type` matches either fully qualified `TypeID` (when it contains a `/`) or
+  a simple Go type name (e.g. `string`, `*MyType`). For non-qualified names, it
+  compares against the raw type name and cleaned object name.
+- Overrides are applied in order; later matches win.
+- Override fields are optional; any missing target type keeps the built-in default.
+- If a template needs a type that is missing after overrides (e.g. `SwiftType`),
+  Oto will error with a clear message.
 
 ### Open API
 

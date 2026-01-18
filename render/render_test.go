@@ -62,6 +62,30 @@ func TestRenderCommentsWithQuotes(t *testing.T) {
 	}
 }
 
+func TestRenderTypeValidation(t *testing.T) {
+	is := is.New(t)
+	def := parser.Definition{
+		Objects: []parser.Object{
+			{
+				Name: "Thing",
+				Fields: []parser.Field{
+					{
+						Name: "ID",
+						Type: parser.FieldType{
+							TypeName: "string",
+							JSType:   "",
+						},
+					},
+				},
+			},
+		},
+	}
+	template := `<%= for (obj) in def.Objects { %><%= for (field) in obj.Fields { %><%= field.Type.JSType %><% } %><% } %>`
+	_, err := Render(template, def, nil)
+	is.True(err != nil)
+	is.True(strings.Contains(err.Error(), "js_type"))
+}
+
 func TestCamelizeDown(t *testing.T) {
 	for in, expected := range map[string]string{
 		"CamelsAreGreat": "camelsAreGreat",

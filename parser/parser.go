@@ -204,6 +204,8 @@ type Parser struct {
 	patterns []string
 	def      Definition
 
+	TypeOverrides []TypeOverride
+
 	// outputObjects marks output object names.
 	outputObjects map[string]struct{}
 	// objects marks object names.
@@ -547,6 +549,7 @@ func (p *Parser) parseFieldType(pkg *packages.Package, obj types.Object) (FieldT
 			ftype.DartType = "double"
 		}
 	}
+	p.applyTypeOverrides(&ftype)
 
 	return ftype, nil
 }
@@ -554,18 +557,22 @@ func (p *Parser) parseFieldType(pkg *packages.Package, obj types.Object) (FieldT
 // addOutputFields adds built-in fields to the response objects
 // mentioned in p.outputObjects.
 func (p *Parser) addOutputFields() error {
+	errorType := FieldType{
+		TypeName:        "string",
+		ObjectName:      "string",
+		CleanObjectName: "string",
+		JSType:          "string",
+		SwiftType:       "String",
+		TSType:          "string",
+		DartType:        "String",
+	}
+	p.applyTypeOverrides(&errorType)
 	errorField := Field{
 		OmitEmpty:      true,
 		Name:           "Error",
 		NameLowerCamel: "error",
 		Comment:        "Error is string explaining what went wrong. Empty if everything was fine.",
-		Type: FieldType{
-			TypeName:  "string",
-			JSType:    "string",
-			SwiftType: "String",
-			TSType:    "string",
-			DartType:  "String",
-		},
+		Type:           errorType,
 		Metadata: map[string]interface{}{},
 		Example:  "something went wrong",
 	}
