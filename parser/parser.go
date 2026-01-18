@@ -483,12 +483,37 @@ func (p *Parser) parseFieldType(pkg *packages.Package, obj types.Object) (FieldT
 		typ = pointerType.Elem()
 		isPointer = true
 	}
+
+	// Check if this type has an override configured before trying to parse it as an object.
+	// This allows external types like time.Time to be handled without parsing their internal structure.
+	hasOverride := false
+	if p.TypeOverrides != nil {
+		if named, ok := typ.(*types.Named); ok {
+			namedPkg := named.Obj().Pkg()
+			if namedPkg != nil {
+				fullPath := namedPkg.Path() + "." + named.Obj().Name()
+				if _, found := p.TypeOverrides[fullPath]; found {
+					hasOverride = true
+					pkgPath = namedPkg.Path()
+				}
+			}
+			if !hasOverride {
+				if _, found := p.TypeOverrides[named.Obj().Name()]; found {
+					hasOverride = true
+				}
+			}
+		}
+	}
+
 	if named, ok := typ.(*types.Named); ok {
 		if structure, ok := named.Underlying().(*types.Struct); ok {
-			if err := p.parseObject(pkg, named.Obj(), structure); err != nil {
-				return ftype, err
+			// Only parse as object if there's no type override configured
+			if !hasOverride {
+				if err := p.parseObject(pkg, named.Obj(), structure); err != nil {
+					return ftype, err
+				}
+				ftype.IsObject = true
 			}
-			ftype.IsObject = true
 		}
 	}
 	// disallow nested structs

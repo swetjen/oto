@@ -5,6 +5,46 @@
  
 class GreeterService {
 	
+	async createUser(createUserRequest) {
+		const headers = {
+			'Accept':		'application/json',
+			'Accept-Encoding':	'gzip',
+			'Content-Type':		'application/json',
+		}
+		createUserRequest = createUserRequest || {}
+		const response = await fetch('/oto/GreeterService.CreateUser', {
+			method: 'POST',
+			headers: headers,
+			body: JSON.stringify(createUserRequest)
+		})
+		return response.json().then((json) => {
+			if (json.error) {
+				throw new Error(json.error)
+			}
+			return json
+		})
+	}
+	
+	async getUser(getUserRequest) {
+		const headers = {
+			'Accept':		'application/json',
+			'Accept-Encoding':	'gzip',
+			'Content-Type':		'application/json',
+		}
+		getUserRequest = getUserRequest || {}
+		const response = await fetch('/oto/GreeterService.GetUser', {
+			method: 'POST',
+			headers: headers,
+			body: JSON.stringify(getUserRequest)
+		})
+		return response.json().then((json) => {
+			if (json.error) {
+				throw new Error(json.error)
+			}
+			return json
+		})
+	}
+	
 	async greet(greetRequest) {
 		const headers = {
 			'Accept':		'application/json',
@@ -16,6 +56,46 @@ class GreeterService {
 			method: 'POST',
 			headers: headers,
 			body: JSON.stringify(greetRequest)
+		})
+		return response.json().then((json) => {
+			if (json.error) {
+				throw new Error(json.error)
+			}
+			return json
+		})
+	}
+	
+	async listUsers(listUsersRequest) {
+		const headers = {
+			'Accept':		'application/json',
+			'Accept-Encoding':	'gzip',
+			'Content-Type':		'application/json',
+		}
+		listUsersRequest = listUsersRequest || {}
+		const response = await fetch('/oto/GreeterService.ListUsers', {
+			method: 'POST',
+			headers: headers,
+			body: JSON.stringify(listUsersRequest)
+		})
+		return response.json().then((json) => {
+			if (json.error) {
+				throw new Error(json.error)
+			}
+			return json
+		})
+	}
+	
+	async updateUserPreferences(updateUserPreferencesRequest) {
+		const headers = {
+			'Accept':		'application/json',
+			'Accept-Encoding':	'gzip',
+			'Content-Type':		'application/json',
+		}
+		updateUserPreferencesRequest = updateUserPreferencesRequest || {}
+		const response = await fetch('/oto/GreeterService.UpdateUserPreferences', {
+			method: 'POST',
+			headers: headers,
+			body: JSON.stringify(updateUserPreferencesRequest)
 		})
 		return response.json().then((json) => {
 			if (json.error) {

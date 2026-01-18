@@ -7,13 +7,23 @@ import (
 	"net/http"
 
 	"github.com/pacedotdev/oto/otohttp"
+
+	time "time"
 )
 
 // GreeterService is a polite API for greeting people.
 type GreeterService interface {
 
+	// CreateUser creates a new user account.
+	CreateUser(context.Context, CreateUserRequest) (*CreateUserResponse, error)
+	// GetUser retrieves a user by their ID.
+	GetUser(context.Context, GetUserRequest) (*GetUserResponse, error)
 	// Greet prepares a lovely greeting.
 	Greet(context.Context, GreetRequest) (*GreetResponse, error)
+	// ListUsers returns a paginated list of users.
+	ListUsers(context.Context, ListUsersRequest) (*ListUsersResponse, error)
+	// UpdateUserPreferences updates a user's preferences.
+	UpdateUserPreferences(context.Context, UpdateUserPreferencesRequest) (*UpdateUserPreferencesResponse, error)
 }
 
 type greeterServiceServer struct {
@@ -27,7 +37,45 @@ func RegisterGreeterService(server *otohttp.Server, greeterService GreeterServic
 		server:         server,
 		greeterService: greeterService,
 	}
+	server.Register("GreeterService", "CreateUser", handler.handleCreateUser)
+	server.Register("GreeterService", "GetUser", handler.handleGetUser)
 	server.Register("GreeterService", "Greet", handler.handleGreet)
+	server.Register("GreeterService", "ListUsers", handler.handleListUsers)
+	server.Register("GreeterService", "UpdateUserPreferences", handler.handleUpdateUserPreferences)
+}
+
+func (s *greeterServiceServer) handleCreateUser(w http.ResponseWriter, r *http.Request) {
+	var request CreateUserRequest
+	if err := otohttp.Decode(r, &request); err != nil {
+		s.server.OnErr(w, r, err)
+		return
+	}
+	response, err := s.greeterService.CreateUser(r.Context(), request)
+	if err != nil {
+		s.server.OnErr(w, r, err)
+		return
+	}
+	if err := otohttp.Encode(w, r, http.StatusOK, response); err != nil {
+		s.server.OnErr(w, r, err)
+		return
+	}
+}
+
+func (s *greeterServiceServer) handleGetUser(w http.ResponseWriter, r *http.Request) {
+	var request GetUserRequest
+	if err := otohttp.Decode(r, &request); err != nil {
+		s.server.OnErr(w, r, err)
+		return
+	}
+	response, err := s.greeterService.GetUser(r.Context(), request)
+	if err != nil {
+		s.server.OnErr(w, r, err)
+		return
+	}
+	if err := otohttp.Encode(w, r, http.StatusOK, response); err != nil {
+		s.server.OnErr(w, r, err)
+		return
+	}
 }
 
 func (s *greeterServiceServer) handleGreet(w http.ResponseWriter, r *http.Request) {
@@ -47,6 +95,74 @@ func (s *greeterServiceServer) handleGreet(w http.ResponseWriter, r *http.Reques
 	}
 }
 
+func (s *greeterServiceServer) handleListUsers(w http.ResponseWriter, r *http.Request) {
+	var request ListUsersRequest
+	if err := otohttp.Decode(r, &request); err != nil {
+		s.server.OnErr(w, r, err)
+		return
+	}
+	response, err := s.greeterService.ListUsers(r.Context(), request)
+	if err != nil {
+		s.server.OnErr(w, r, err)
+		return
+	}
+	if err := otohttp.Encode(w, r, http.StatusOK, response); err != nil {
+		s.server.OnErr(w, r, err)
+		return
+	}
+}
+
+func (s *greeterServiceServer) handleUpdateUserPreferences(w http.ResponseWriter, r *http.Request) {
+	var request UpdateUserPreferencesRequest
+	if err := otohttp.Decode(r, &request); err != nil {
+		s.server.OnErr(w, r, err)
+		return
+	}
+	response, err := s.greeterService.UpdateUserPreferences(r.Context(), request)
+	if err != nil {
+		s.server.OnErr(w, r, err)
+		return
+	}
+	if err := otohttp.Encode(w, r, http.StatusOK, response); err != nil {
+		s.server.OnErr(w, r, err)
+		return
+	}
+}
+
+// CreateUserRequest contains the data for creating a new user.
+type CreateUserRequest struct {
+	// Email is the user's email address.
+	Email string `json:"email"`
+	// Username is the desired username.
+	Username string `json:"username"`
+	// FullName is the user's full name.
+	FullName string `json:"fullName"`
+	// Age is the user's age in years.
+	Age int `json:"age"`
+	// Profile contains optional profile information.
+	Profile UserProfile `json:"profile"`
+	// Tags are optional labels for the user.
+	Tags []string `json:"tags"`
+}
+
+// CreateUserResponse contains the newly created user.
+type CreateUserResponse struct {
+	// User is the created user with assigned ID.
+	User User `json:"user"`
+}
+
+// GetUserRequest is the request for fetching a user.
+type GetUserRequest struct {
+	// UserID is the unique identifier for the user.
+	UserID string `json:"userID"`
+}
+
+// GetUserResponse contains the requested user.
+type GetUserResponse struct {
+	// User is the requested user details.
+	User User `json:"user"`
+}
+
 // GreetRequest is the request object for GreeterService.Greet.
 type GreetRequest struct {
 	// Name is the person to greet. It is required.
@@ -57,6 +173,126 @@ type GreetRequest struct {
 type GreetResponse struct {
 	// Greeting is a nice message welcoming somebody.
 	Greeting string `json:"greeting"`
-	// Error is string explaining what went wrong. Empty if everything was fine.
-	Error string `json:"error,omitempty"`
+}
+
+// ListUsersRequest contains pagination parameters.
+type ListUsersRequest struct {
+	// Page is the page number (1-indexed).
+	Page int `json:"page"`
+	// PageSize is the number of results per page.
+	PageSize int `json:"pageSize"`
+	// SortBy is the field to sort by.
+	SortBy string `json:"sortBy"`
+	// SortDescending indicates descending sort order.
+	SortDescending bool `json:"sortDescending"`
+	// Filter contains optional filter criteria.
+	Filter UserFilter `json:"filter"`
+}
+
+// ListUsersResponse contains a page of users.
+type ListUsersResponse struct {
+	// Users is the list of users for this page.
+	Users []User `json:"users"`
+	// TotalCount is the total number of users matching the filter.
+	TotalCount int `json:"totalCount"`
+	// HasMore indicates if there are more pages.
+	HasMore bool `json:"hasMore"`
+}
+
+// SocialLink represents a link to a social profile.
+type SocialLink struct {
+	// Platform is the social platform name.
+	Platform string `json:"platform"`
+	// URL is the profile URL.
+	URL string `json:"url"`
+}
+
+// UpdateUserPreferencesRequest contains preference updates.
+type UpdateUserPreferencesRequest struct {
+	// UserID is the user to update.
+	UserID string `json:"userID"`
+	// Preferences contains the new preference values.
+	Preferences UserPreferences `json:"preferences"`
+}
+
+// UpdateUserPreferencesResponse confirms the update.
+type UpdateUserPreferencesResponse struct {
+	// Success indicates if the update was successful.
+	Success bool `json:"success"`
+	// UpdatedAt is when the preferences were updated.
+	UpdatedAt time.Time `json:"updatedAt"`
+}
+
+// User represents a user in the system.
+type User struct {
+	// ID is the unique identifier (UUID format).
+	ID string `json:"id"`
+	// Email is the user's email address.
+	Email string `json:"email"`
+	// Username is the user's chosen username.
+	Username string `json:"username"`
+	// FullName is the user's display name.
+	FullName string `json:"fullName"`
+	// Age is the user's age in years.
+	Age int `json:"age"`
+	// Balance is the user's account balance.
+	Balance float64 `json:"balance"`
+	// IsActive indicates if the account is active.
+	IsActive bool `json:"isActive"`
+	// Profile contains extended profile information.
+	Profile UserProfile `json:"profile"`
+	// Preferences contains user settings.
+	Preferences UserPreferences `json:"preferences"`
+	// Tags are labels associated with the user.
+	Tags []string `json:"tags"`
+	// CreatedAt is when the user was created.
+	CreatedAt time.Time `json:"createdAt"`
+	// UpdatedAt is when the user was last modified.
+	UpdatedAt time.Time `json:"updatedAt"`
+	// LastLoginAt is when the user last logged in (optional).
+	LastLoginAt *time.Time `json:"lastLoginAt"`
+}
+
+// UserFilter contains criteria for filtering users.
+type UserFilter struct {
+	// IsActive filters by active status.
+	IsActive *bool `json:"isActive"`
+	// MinAge filters users with age >= this value.
+	MinAge *int `json:"minAge"`
+	// MaxAge filters users with age <= this value.
+	MaxAge *int `json:"maxAge"`
+	// HasTag filters users that have this tag.
+	HasTag string `json:"hasTag"`
+	// CreatedAfter filters users created after this time.
+	CreatedAfter *time.Time `json:"createdAfter"`
+	// CreatedBefore filters users created before this time.
+	CreatedBefore *time.Time `json:"createdBefore"`
+}
+
+// UserPreferences contains user settings.
+type UserPreferences struct {
+	// Theme is the UI theme preference.
+	Theme string `json:"theme"`
+	// Language is the preferred language code.
+	Language string `json:"language"`
+	// EmailNotifications enables email notifications.
+	EmailNotifications bool `json:"emailNotifications"`
+	// WeeklyDigest enables weekly summary emails.
+	WeeklyDigest bool `json:"weeklyDigest"`
+	// Timezone is the user's timezone.
+	Timezone string `json:"timezone"`
+}
+
+// UserProfile contains extended profile information.
+type UserProfile struct {
+	// Bio is a short biography.
+	Bio string `json:"bio"`
+	// AvatarURL is the URL to the user's avatar image.
+	AvatarURL string `json:"avatarURL"`
+	// Location is the user's location.
+	Location string `json:"location"`
+	// Website is the user's personal website.
+	Website string `json:"website"`
+	// SocialLinks contains links to social profiles.
+	SocialLinks []SocialLink `json:"socialLinks"`
 }

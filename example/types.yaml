@@ -1,0 +1,7 @@
+version: "1"
+overrides:
+  - go_type: "time.Time"
+    js_type: "string"
+    ts_type: "string"
+    swift_type: "Date"
+    dart_type: "DateTime"
