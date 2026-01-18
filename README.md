@@ -94,7 +94,6 @@ oto -template ./templates/client.js.plush \
 
 - `-ignore`: Comma-separated list of interfaces to exclude from generation
 - `-fields`: Comma-separated list of fields to exclude from all objects
-- `-suppressErrorField`: When set, suppresses the error field in response objects
 - `-types`: Path to a YAML config file for type overrides (see "Type Overrides" below)
 
 Implement the service in Go:

@@ -214,9 +214,6 @@ type Parser struct {
 	// objects marks object names.
 	objects map[string]struct{}
 
-	// SuppressErrorField suppresses the Error field in output objects.
-	SuppressErrorField bool
-
 	// docs are the docs for extracting comments.
 	docs *doc.Package
 }
@@ -295,11 +292,6 @@ func (p *Parser) Parse() (Definition, error) {
 	sort.Slice(p.def.Objects, func(i, j int) bool {
 		return p.def.Objects[i].Name < p.def.Objects[j].Name
 	})
-	if !p.SuppressErrorField {
-		if err := p.addOutputFields(); err != nil {
-			return p.def, err
-		}
-	}
 	return p.def, nil
 }
 
@@ -580,34 +572,6 @@ func (p *Parser) parseFieldType(pkg *packages.Package, obj types.Object) (FieldT
 	return ftype, nil
 }
 
-// addOutputFields adds built-in fields to the response objects
-// mentioned in p.outputObjects.
-func (p *Parser) addOutputFields() error {
-	errorField := Field{
-		OmitEmpty:      true,
-		Name:           "Error",
-		NameLowerCamel: "error",
-		Comment:        "Error is string explaining what went wrong. Empty if everything was fine.",
-		Type: FieldType{
-			TypeName:  "string",
-			JSType:    "string",
-			SwiftType: "String",
-			TSType:    "string",
-			DartType:  "String",
-		},
-		Metadata: map[string]interface{}{},
-		Example:  "something went wrong",
-	}
-	for typeName := range p.outputObjects {
-		obj, err := p.def.Object(typeName)
-		if err != nil {
-			// skip if we can't find it - it must be excluded
-			continue
-		}
-		obj.Fields = append(obj.Fields, errorField)
-	}
-	return nil
-}
 
 func (p *Parser) wrapErr(err error, pkg *packages.Package, pos token.Pos) error {
 	position := pkg.Fset.Position(pos)

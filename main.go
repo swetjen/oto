@@ -39,9 +39,8 @@ flags:`)
 		v                  = flags.Bool("v", false, "verbose output")
 		paramsStr          = flags.String("params", "", "list of parameters in the format: \"key:value,key:value\"")
 		ignoreList         = flags.String("ignore", "", "comma separated list of interfaces to ignore")
-		ignoreFieldList    = flags.String("fields", "", "comma separated list of fields to ignore")
-		suppressErrorField = flags.Bool("suppressErrorField", false, "suppress error field in response")
-		typesConfig        = flags.String("types", "", "path to types.yaml config file for type overrides")
+		ignoreFieldList = flags.String("fields", "", "comma separated list of fields to ignore")
+		typesConfig     = flags.String("types", "", "path to types.yaml config file for type overrides")
 	)
 	if err := flags.Parse(args[1:]); err != nil {
 		return err
@@ -56,7 +55,6 @@ flags:`)
 		return errors.Wrap(err, "params")
 	}
 	p := parser.New(flags.Args()...)
-	p.SuppressErrorField = *suppressErrorField
 	if *typesConfig != "" {
 		cfg, err := parser.LoadTypesConfig(*typesConfig)
 		if err != nil {
