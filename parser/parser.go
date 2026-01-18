@@ -206,13 +206,8 @@ type Parser struct {
 
 	TypeOverrides []TypeOverride
 
-	// outputObjects marks output object names.
-	outputObjects map[string]struct{}
 	// objects marks object names.
 	objects map[string]struct{}
-
-	// SuppressErrorField suppresses the Error field in output objects.
-	SuppressErrorField bool
 
 	// docs are the docs for extracting comments.
 	docs *doc.Package
@@ -237,7 +232,6 @@ func (p *Parser) Parse() (Definition, error) {
 	if err != nil {
 		return p.def, err
 	}
-	p.outputObjects = make(map[string]struct{})
 	p.objects = make(map[string]struct{})
 	var excludedObjectsTypeIDs []string
 	for _, pkg := range pkgs {
@@ -292,11 +286,6 @@ func (p *Parser) Parse() (Definition, error) {
 	sort.Slice(p.def.Objects, func(i, j int) bool {
 		return p.def.Objects[i].Name < p.def.Objects[j].Name
 	})
-	if !p.SuppressErrorField {
-		if err := p.addOutputFields(); err != nil {
-			return p.def, err
-		}
-	}
 	return p.def, nil
 }
 
@@ -351,7 +340,6 @@ func (p *Parser) parseMethod(pkg *packages.Package, serviceName string, methodTy
 	if err != nil {
 		return m, errors.Wrap(err, "parse output object type")
 	}
-	p.outputObjects[m.OutputObject.TypeName] = struct{}{}
 	return m, nil
 }
 
@@ -552,39 +540,6 @@ func (p *Parser) parseFieldType(pkg *packages.Package, obj types.Object) (FieldT
 	p.applyTypeOverrides(&ftype)
 
 	return ftype, nil
-}
-
-// addOutputFields adds built-in fields to the response objects
-// mentioned in p.outputObjects.
-func (p *Parser) addOutputFields() error {
-	errorType := FieldType{
-		TypeName:        "string",
-		ObjectName:      "string",
-		CleanObjectName: "string",
-		JSType:          "string",
-		SwiftType:       "String",
-		TSType:          "string",
-		DartType:        "String",
-	}
-	p.applyTypeOverrides(&errorType)
-	errorField := Field{
-		OmitEmpty:      true,
-		Name:           "Error",
-		NameLowerCamel: "error",
-		Comment:        "Error is string explaining what went wrong. Empty if everything was fine.",
-		Type:           errorType,
-		Metadata: map[string]interface{}{},
-		Example:  "something went wrong",
-	}
-	for typeName := range p.outputObjects {
-		obj, err := p.def.Object(typeName)
-		if err != nil {
-			// skip if we can't find it - it must be excluded
-			continue
-		}
-		obj.Fields = append(obj.Fields, errorField)
-	}
-	return nil
 }
 
 func (p *Parser) wrapErr(err error, pkg *packages.Package, pos token.Pos) error {

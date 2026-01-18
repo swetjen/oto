@@ -43,20 +43,22 @@ class OtoClient {
                     return
                 }
             }
+			guard let responseData = data, responseData.count > 0 else {
+				completion(<%= method.OutputObject.TypeName %>(), nil)
+				return
+			}
+			if let responseText = String(data: responseData, encoding: .utf8)?.trimmingCharacters(in: .whitespacesAndNewlines),
+			   responseText == "null" || responseText == "" {
+				completion(<%= method.OutputObject.TypeName %>(), nil)
+				return
+			}
 			var <%= camelize_down(method.OutputObject.TypeName) %>: <%= method.OutputObject.TypeName %>
 			do {
-				<%= camelize_down(method.OutputObject.TypeName) %> = try JSONDecoder().decode(<%= method.OutputObject.TypeName %>.self, from: data!)
+				<%= camelize_down(method.OutputObject.TypeName) %> = try JSONDecoder().decode(<%= method.OutputObject.TypeName %>.self, from: responseData)
 			} catch let err {
 				completion(nil, err)
 				return
 			}
-            if let serviceErr = <%= camelize_down(method.OutputObject.TypeName) %>.error {
-                if (serviceErr != "") {
-                    let err = OtoError(serviceErr)
-                        completion(nil, err)
-                        return
-                }
-            }
 			completion(<%= camelize_down(method.OutputObject.TypeName) %>, nil)
 		}
 		task.resume()

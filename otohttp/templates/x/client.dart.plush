@@ -60,9 +60,19 @@ class <%= service.Name %>Service {
 			})
 		);
 		if (response.statusCode != 200) {
-			throw Error.fromJson(response.data);
+			if (response.data is Map && response.data['error'] != null) {
+				throw Error.fromJson(Map<String, dynamic>.from(response.data));
+			}
+			throw Error(errorMessage: response.statusMessage ?? 'request failed');
 		}
-		return <%= method.OutputObject.TypeName %>.fromJson(response.data);
+		final data = response.data;
+		if (data == null || (data is String && data.isEmpty)) {
+			return <%= method.OutputObject.TypeName %>.fromJson({});
+		}
+		if (data is Map) {
+			return <%= method.OutputObject.TypeName %>.fromJson(Map<String, dynamic>.from(data));
+		}
+		return <%= method.OutputObject.TypeName %>.fromJson(data);
 	}
 <% } %>
 }

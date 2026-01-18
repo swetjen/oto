@@ -102,7 +102,7 @@ You will love it.`)
 	is.Equal(greetOutputObject.Name, "GetGreetingsResponse")
 	is.Equal(greetOutputObject.Comment, "GetGreetingsResponse is the respponse object for GreeterService.GetGreetings.")
 	is.Equal(greetOutputObject.Metadata["featured"], false) // custom metadata
-	is.Equal(len(greetOutputObject.Fields), 2)
+	is.Equal(len(greetOutputObject.Fields), 1)
 	is.Equal(greetOutputObject.Fields[0].Name, "Greetings")
 	is.Equal(greetOutputObject.Fields[0].NameLowerCamel, "greetings")
 	is.Equal(greetOutputObject.Fields[0].Type.TypeID, "github.com/pacedotdev/oto/parser/testdata/services/pleasantries.Greeting")
@@ -110,12 +110,6 @@ You will love it.`)
 	is.Equal(greetOutputObject.Fields[0].Type.TypeName, "Greeting")
 	is.Equal(greetOutputObject.Fields[0].Type.Multiple, true)
 	is.Equal(greetOutputObject.Fields[0].Type.Package, "")
-	is.Equal(greetOutputObject.Fields[1].Name, "Error")
-	is.Equal(greetOutputObject.Fields[1].NameLowerCamel, "error")
-	is.Equal(greetOutputObject.Fields[1].OmitEmpty, true)
-	is.Equal(greetOutputObject.Fields[1].Type.TypeName, "string")
-	is.Equal(greetOutputObject.Fields[1].Type.Multiple, false)
-	is.Equal(greetOutputObject.Fields[1].Type.Package, "")
 
 	is.Equal(def.Services[1].Name, "StrangeTypesService")
 	strangeInputObj, err := def.Object(def.Services[1].Methods[0].InputObject.ObjectName)
@@ -174,7 +168,7 @@ You will love it.`)
 	welcomeOutputObject, err := def.Object(def.Services[2].Methods[0].OutputObject.TypeName)
 	is.NoErr(err)
 	is.Equal(welcomeOutputObject.Name, "WelcomeResponse")
-	is.Equal(len(welcomeOutputObject.Fields), 2)
+	is.Equal(len(welcomeOutputObject.Fields), 1)
 	is.Equal(welcomeOutputObject.Fields[0].Name, "Message")
 	is.Equal(welcomeOutputObject.Fields[0].NameLowerCamel, "message")
 	is.Equal(welcomeOutputObject.Fields[0].Type.IsObject, false)
@@ -182,15 +176,6 @@ You will love it.`)
 	is.Equal(welcomeOutputObject.Fields[0].Type.TypeName, "string")
 	is.Equal(welcomeOutputObject.Fields[0].Type.Multiple, false)
 	is.Equal(welcomeOutputObject.Fields[0].Type.Package, "")
-	is.Equal(welcomeOutputObject.Fields[1].Name, "Error")
-	is.Equal(welcomeOutputObject.Fields[1].NameLowerCamel, "error")
-	is.Equal(welcomeOutputObject.Fields[1].OmitEmpty, true)
-	is.Equal(welcomeOutputObject.Fields[1].Type.TypeName, "string")
-	is.Equal(welcomeOutputObject.Fields[1].Type.Multiple, false)
-	is.Equal(welcomeOutputObject.Fields[1].Type.Package, "")
-	is.Equal(welcomeOutputObject.Fields[1].Type.JSType, "string")
-	is.Equal(welcomeOutputObject.Fields[1].Type.TSType, "string")
-	is.Equal(welcomeOutputObject.Fields[1].Type.SwiftType, "String")
 	is.True(welcomeOutputObject.Metadata != nil)
 
 	is.Equal(len(def.Objects), 11)
@@ -218,6 +203,25 @@ func TestFieldTypeIsOptional(t *testing.T) {
 	is.Equal(f.IsOptional(), true)
 	f = FieldType{ObjectName: "SomeType"}
 	is.Equal(f.IsOptional(), false)
+}
+
+func TestNoDefaultErrorField(t *testing.T) {
+	is := is.New(t)
+	parser := New("./testdata/services/pleasantries")
+	def, err := parser.Parse()
+	is.NoErr(err)
+
+	for _, service := range def.Services {
+		for _, method := range service.Methods {
+			obj, err := def.Object(method.OutputObject.TypeName)
+			is.NoErr(err)
+			for _, field := range obj.Fields {
+				if field.Name == "Error" {
+					t.Fatalf("unexpected Error field on %s.%s output", service.Name, method.Name)
+				}
+			}
+		}
+	}
 }
 
 func TestExtractCommentMetadata(t *testing.T) {

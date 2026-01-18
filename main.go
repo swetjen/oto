@@ -41,7 +41,6 @@ flags:`)
 		paramsStr          = flags.String("params", "", "list of parameters in the format: \"key:value,key:value\"")
 		ignoreList         = flags.String("ignore", "", "comma separated list of interfaces to ignore")
 		ignoreFieldList    = flags.String("fields", "", "comma separated list of fields to ignore")
-		suppressErrorField = flags.Bool("suppressErrorField", false, "suppress error field in response")
 		typeMapPath        = flags.String("type-map", "", "path to type mapping config (yaml)")
 	)
 	if err := flags.Parse(args[1:]); err != nil {
@@ -57,7 +56,6 @@ flags:`)
 		return errors.Wrap(err, "params")
 	}
 	p := parser.New(flags.Args()...)
-	p.SuppressErrorField = *suppressErrorField
 	ignoreItems := strings.Split(*ignoreList, ",")
 	if ignoreItems[0] != "" {
 		p.ExcludeInterfaces = ignoreItems
