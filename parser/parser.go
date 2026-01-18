@@ -196,6 +196,7 @@ func (f FieldType) IsOptional() bool {
 type Parser struct {
 	Verbose bool
 
+	ExcludeFields     []string
 	ExcludeInterfaces []string
 
 	PackageName string
@@ -390,7 +391,20 @@ func (p *Parser) parseObject(pkg *packages.Package, o types.Object, v *types.Str
 		if err != nil {
 			return errors.Wrap(err, "parse field tag")
 		}
-		obj.Fields = append(obj.Fields, field)
+		if len(p.ExcludeFields) == 0 {
+			obj.Fields = append(obj.Fields, field)
+		} else {
+			var valid = true
+			for _, f := range p.ExcludeFields {
+				if strings.Contains(field.Tag, f) {
+					valid = false
+					break
+				}
+			}
+			if valid {
+				obj.Fields = append(obj.Fields, field)
+			}
+		}
 	}
 	p.def.Objects = append(p.def.Objects, obj)
 	p.objects[obj.Name] = struct{}{}
