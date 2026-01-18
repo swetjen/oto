@@ -2,41 +2,191 @@
 
 'use strict';
 
- 
-class GreeterService {
-	
-	async greet(greetRequest) {
-		const headers = {
-			'Accept':		'application/json',
-			'Accept-Encoding':	'gzip',
-			'Content-Type':		'application/json',
-		}
-		greetRequest = greetRequest || {}
-		const response = await fetch('/oto/GreeterService.Greet', {
-			method: 'POST',
-			headers: headers,
-			body: JSON.stringify(greetRequest)
-		})
-		const text = await response.text()
-		let json = null
-		if (text) {
-			try {
-				json = JSON.parse(text)
-			} catch (e) {
-				if (!response.ok) {
-					throw new Error(`GreeterService.Greet: ${response.status} ${response.statusText}`)
-				}
-				throw e
-			}
-		}
-		if (!response.ok) {
-			if (json && json.error) {
-				throw new Error(json.error)
-			}
-			throw new Error(`GreeterService.Greet: ${response.status} ${response.statusText}`)
-		}
-		return json || {}
-	}
-	
-}
+/**
+ * Errors thrown by client methods include network failures or server errors.
+ */
 
+
+
+/**
+ * @typedef {Object} GreeterServiceCreateUserRequest
+
+
+
+
+
+ * @property {object} user
+
+ * @property {string} invitedBy
+
+ * @property {DateTime} requestedAt
+
+
+
+
+
+
+
+
+
+
+
+ */
+/**
+ * @typedef {Object} GreeterServiceCreateUserResponse
+
+
+
+
+
+
+
+ * @property {object} user
+
+ * @property {string} welcomeMessage
+
+
+
+
+
+
+
+
+
+ */
+
+/**
+ * @typedef {Object} GreeterServiceGreetRequest
+
+
+
+
+
+
+
+
+
+ * @property {string} name - Name is the person to greet. It is required.
+
+
+
+
+
+
+
+ */
+/**
+ * @typedef {Object} GreeterServiceGreetResponse
+
+
+
+
+
+
+
+
+
+
+
+ * @property {string} greeting - Greeting is a nice message welcoming somebody.
+
+
+
+
+
+ */
+
+
+
+const client = {
+
+	
+	/**
+	 * GreeterService is a polite API for greeting people.
+	 */
+	
+	GreeterService: {
+		
+		/**
+		
+		 * CreateUser registers a new user and returns the stored record.
+		
+		 * @param {GreeterServiceCreateUserRequest} [request]
+		 * @returns {Promise<GreeterServiceCreateUserResponse>}
+		 */
+		async createUser(request) {
+			const headers = {
+				'Accept':		'application/json',
+				'Accept-Encoding':	'gzip',
+				'Content-Type':		'application/json',
+			}
+			request = request || {}
+			const response = await fetch('/oto/GreeterService.CreateUser', {
+				method: 'POST',
+				headers: headers,
+				body: JSON.stringify(request)
+			})
+			const text = await response.text()
+			let json = null
+			if (text) {
+				try {
+					json = JSON.parse(text)
+				} catch (e) {
+					if (!response.ok) {
+						throw new Error(`GreeterService.CreateUser: ${response.status} ${response.statusText}`)
+					}
+					throw e
+				}
+			}
+			if (!response.ok) {
+				if (json && json.error) {
+					throw new Error(json.error)
+				}
+				throw new Error(`GreeterService.CreateUser: ${response.status} ${response.statusText}`)
+			}
+			return json || {}
+		}
+		
+		/**
+		
+		 * Greet prepares a lovely greeting.
+		
+		 * @param {GreeterServiceGreetRequest} [request]
+		 * @returns {Promise<GreeterServiceGreetResponse>}
+		 */
+		async greet(request) {
+			const headers = {
+				'Accept':		'application/json',
+				'Accept-Encoding':	'gzip',
+				'Content-Type':		'application/json',
+			}
+			request = request || {}
+			const response = await fetch('/oto/GreeterService.Greet', {
+				method: 'POST',
+				headers: headers,
+				body: JSON.stringify(request)
+			})
+			const text = await response.text()
+			let json = null
+			if (text) {
+				try {
+					json = JSON.parse(text)
+				} catch (e) {
+					if (!response.ok) {
+						throw new Error(`GreeterService.Greet: ${response.status} ${response.statusText}`)
+					}
+					throw e
+				}
+			}
+			if (!response.ok) {
+				if (json && json.error) {
+					throw new Error(json.error)
+				}
+				throw new Error(`GreeterService.Greet: ${response.status} ${response.statusText}`)
+			}
+			return json || {}
+		}
+		
+	},
+
+}

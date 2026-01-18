@@ -12,6 +12,8 @@ import (
 // GreeterService is a polite API for greeting people.
 type GreeterService interface {
 
+	// CreateUser registers a new user and returns the stored record.
+	CreateUser(context.Context, CreateUserRequest) (*CreateUserResponse, error)
 	// Greet prepares a lovely greeting.
 	Greet(context.Context, GreetRequest) (*GreetResponse, error)
 }
@@ -27,7 +29,25 @@ func RegisterGreeterService(server *otohttp.Server, greeterService GreeterServic
 		server:         server,
 		greeterService: greeterService,
 	}
+	server.Register("GreeterService", "CreateUser", handler.handleCreateUser)
 	server.Register("GreeterService", "Greet", handler.handleGreet)
+}
+
+func (s *greeterServiceServer) handleCreateUser(w http.ResponseWriter, r *http.Request) {
+	var request CreateUserRequest
+	if err := otohttp.Decode(r, &request); err != nil {
+		s.server.OnErr(w, r, err)
+		return
+	}
+	response, err := s.greeterService.CreateUser(r.Context(), request)
+	if err != nil {
+		s.server.OnErr(w, r, err)
+		return
+	}
+	if err := otohttp.Encode(w, r, http.StatusOK, response); err != nil {
+		s.server.OnErr(w, r, err)
+		return
+	}
 }
 
 func (s *greeterServiceServer) handleGreet(w http.ResponseWriter, r *http.Request) {
@@ -47,6 +67,29 @@ func (s *greeterServiceServer) handleGreet(w http.ResponseWriter, r *http.Reques
 	}
 }
 
+// Address contains mailing information for a user.
+type Address struct {
+	Line1      string `json:"line1"`
+	Line2      string `json:"line2"`
+	City       string `json:"city"`
+	Region     string `json:"region"`
+	PostalCode string `json:"postalCode"`
+	Country    string `json:"country"`
+}
+
+// CreateUserRequest is the request object for GreeterService.CreateUser.
+type CreateUserRequest struct {
+	User        User     `json:"user"`
+	InvitedBy   *UUID    `json:"invitedBy"`
+	RequestedAt DateTime `json:"requestedAt"`
+}
+
+// CreateUserResponse is the response object for GreeterService.CreateUser.
+type CreateUserResponse struct {
+	User           User   `json:"user"`
+	WelcomeMessage string `json:"welcomeMessage"`
+}
+
 // GreetRequest is the request object for GreeterService.Greet.
 type GreetRequest struct {
 	// Name is the person to greet. It is required.
@@ -57,4 +100,17 @@ type GreetRequest struct {
 type GreetResponse struct {
 	// Greeting is a nice message welcoming somebody.
 	Greeting string `json:"greeting"`
+}
+
+// User represents a person in the system.
+type User struct {
+	ID          UUID              `json:"id"`
+	Name        string            `json:"name"`
+	Email       string            `json:"email"`
+	Type        UserType          `json:"type"`
+	Address     Address           `json:"address"`
+	CreatedAt   DateTime          `json:"createdAt"`
+	LastLoginAt *DateTime         `json:"lastLoginAt"`
+	Tags        []string          `json:"tags"`
+	Metadata    map[string]string `json:"metadata"`
 }

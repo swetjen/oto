@@ -130,11 +130,9 @@ func main() {
 Use the generated client to access the service in JavaScript:
 
 ```javascript
-import { GreeterService } from "oto.gen.js";
+import { client } from "oto.gen.js";
 
-const greeterService = new GreeterService();
-
-greeterService
+client.GreeterService
   .greet({
     name: "Mat",
   })

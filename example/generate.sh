@@ -4,7 +4,7 @@
 	-out server.gen.go \
 	-pkg main \
 	./def
-gofmt -w server.gen.go server.gen.go
+gofmt -w server.gen.go
 echo "generated server.gen.go"
 
 ../oto -template client.js.plush \
