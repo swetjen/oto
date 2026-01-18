@@ -90,6 +90,13 @@ oto -template ./templates/client.js.plush \
 
 - Run `oto -help` for more information about these flags
 
+### Additional flags
+
+- `-ignore`: Comma-separated list of interfaces to exclude from generation
+- `-fields`: Comma-separated list of fields to exclude from all objects
+- `-suppressErrorField`: When set, suppresses the error field in response objects
+- `-types`: Path to a YAML config file for type overrides (see "Type Overrides" below)
+
 Implement the service in Go:
 
 ```go
@@ -117,14 +124,15 @@ package main
 func main() {
     g := GreeterService{}
     server := otohttp.NewServer()
-    server.Basepath = "/oto/"
     generated.RegisterGreeterService(server, g)
-    http.Handle(server.Basepath, server)
+    http.Handle("/oto/", server)
     log.Fatal(http.ListenAndServe(":8080", nil))
 }
 ```
 
-- The `otohttp.Server` performs its own routing and so has a `Basepath` field which you should use when you route the handler.
+- The `otohttp.Server` has a `Basepath` field (default: `/oto/`) that determines the URL prefix for service routes
+- When mounting the server, use the same path as `Basepath` (e.g., `http.Handle("/oto/", server)`)
+- To customize the basepath: `server.Basepath = "/api/"` then `http.Handle("/api/", server)`
 
 Use the generated client to access the service in JavaScript:
 
@@ -148,12 +156,49 @@ You can control the name of the field in JSON and in front-end code using `json`
 ```go
 // Thing does something.
 type Thing struct {
-    SomeField string `json:"some_field"
+    SomeField string `json:"some_field"`
 }
 ```
 
 - The `SomeField` field will appear as `some_field` in json and front-end code
 - The name must be a valid JavaScript field name
+
+## Type Overrides
+
+You can configure how Go types map to target language types using a YAML configuration file with the `-types` flag:
+
+```bash
+oto -template ./templates/client.ts.plush \
+    -out ./generated/client.gen.ts \
+    -types ./types.yaml \
+    ./definitions
+```
+
+Create a `types.yaml` file to define your type mappings:
+
+```yaml
+version: "1"
+overrides:
+  - go_type: "time.Time"
+    js_type: "Date"
+    ts_type: "Date"
+    swift_type: "Date"
+    dart_type: "DateTime"
+  - go_type: "github.com/google/uuid.UUID"
+    js_type: "string"
+    ts_type: "string"
+    swift_type: "UUID"
+    dart_type: "String"
+  - go_type: "int64"
+    swift_type: "Int64"  # Partial override - only specify languages you need
+```
+
+Each override can specify any combination of target language types:
+- `go_type`: The fully qualified Go type to match (required)
+- `js_type`: JavaScript type override
+- `ts_type`: TypeScript type override
+- `swift_type`: Swift type override
+- `dart_type`: Dart type override
 
 ## Specifying additional template data
 
