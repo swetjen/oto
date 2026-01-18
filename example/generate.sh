@@ -10,11 +10,13 @@ echo "generated server.gen.go"
 ../oto -template client.js.plush \
 	-out client.gen.js \
 	-pkg main \
+	-type-map ./type-mapping.yaml \
 	./def
 echo "generated client.gen.js"
 
 ../oto -template client.swift.plush \
 	-out ./swift/SwiftCLIExample/SwiftCLIExample/client.gen.swift \
 	-pkg main \
+	-type-map ./type-mapping.yaml \
 	./def
 echo "generated client.gen.swift"

@@ -39,7 +39,7 @@ go install github.com/pacedotdev/oto@latest
 Create a project folder, and write your service definition as a Go interface:
 
 ```go
-// definitions/definitons.go
+// definitions/definitions.go
 package definitions
 
 // GreeterService makes nice greetings.
@@ -81,7 +81,7 @@ oto -template ./templates/server.go.plush \
     -ignore Ignorer \
     -pkg generated \
     ./definitions
-gofmt -w ./generated/oto.gen.go ./generated/oto.gen.go
+gofmt -w ./generated/oto.gen.go
 oto -template ./templates/client.js.plush \
     -out ./generated/oto.gen.js \
     -ignore Ignorer \
@@ -149,7 +149,7 @@ You can control the name of the field in JSON and in front-end code using `json`
 ```go
 // Thing does something.
 type Thing struct {
-    SomeField string `json:"some_field"
+    SomeField string `json:"some_field"`
 }
 ```
 
