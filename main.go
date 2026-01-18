@@ -27,7 +27,8 @@ func run(stdout io.Writer, args []string) error {
 	flags := flag.NewFlagSet(args[0], flag.ContinueOnError)
 	flags.Usage = func() {
 		fmt.Println(args[0] + " " + Version + ` usage:
-	oto [flags] paths [[path2] [path3]...]`)
+	oto [flags] paths [[path2] [path3]...]
+Updated by claude`)
 		fmt.Println(`
 flags:`)
 		flags.PrintDefaults()
@@ -39,13 +40,14 @@ flags:`)
 		v                  = flags.Bool("v", false, "verbose output")
 		paramsStr          = flags.String("params", "", "list of parameters in the format: \"key:value,key:value\"")
 		ignoreList         = flags.String("ignore", "", "comma separated list of interfaces to ignore")
+		ignoreFieldList    = flags.String("fields", "", "comma separated list of fields to ignore")
 		suppressErrorField = flags.Bool("suppressErrorField", false, "suppress error field in response")
 	)
 	if err := flags.Parse(args[1:]); err != nil {
 		return err
 	}
 	if *template == "" {
-		flags.PrintDefaults()
+		flags.Usage()
 		return errors.New("missing template")
 	}
 	params, err := parseParams(*paramsStr)
@@ -58,6 +60,10 @@ flags:`)
 	ignoreItems := strings.Split(*ignoreList, ",")
 	if ignoreItems[0] != "" {
 		p.ExcludeInterfaces = ignoreItems
+	}
+	ignoreFields := strings.Split(*ignoreFieldList, ",")
+	if ignoreFields[0] != "" {
+		p.ExcludeFields = ignoreFields
 	}
 	p.Verbose = *v
 	if p.Verbose {
