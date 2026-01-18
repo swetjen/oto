@@ -28,7 +28,7 @@ func run(stdout io.Writer, args []string) error {
 	flags.Usage = func() {
 		fmt.Println(args[0] + " " + Version + ` usage:
 	oto [flags] paths [[path2] [path3]...]
-Updated by claude`)
+updated by Codex`)
 		fmt.Println(`
 flags:`)
 		flags.PrintDefaults()
