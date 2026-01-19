@@ -18,7 +18,7 @@ Go driven rpc code generation tool for right now.
 These templates are already being used in production.
 
 - There are some [official Oto templates](https://github.com/pacedotdev/oto/tree/master/otohttp/templates)
-- The [Pace CLI tool](https://github.com/pacedotdev/pace/blob/master/oto/cli.go.plush) is generated from an open-source CLI template
+- The [Pace CLI tool](https://github.com/pacedotdev/pace/blob/master/oto/cli.go.txt) is generated from an open-source CLI template
 
 ## Learn
 
@@ -68,21 +68,21 @@ Download templates from otohttp
 
 ```bash
 mkdir templates \
-    && wget https://raw.githubusercontent.com/pacedotdev/oto/master/otohttp/templates/server.go.plush -q -O ./templates/server.go.plush \
-    && wget https://raw.githubusercontent.com/pacedotdev/oto/master/otohttp/templates/client.js.plush -q -O ./templates/client.js.plush
+    && wget https://raw.githubusercontent.com/pacedotdev/oto/master/otohttp/templates/server.go.txt -q -O ./templates/server.go.txt \
+    && wget https://raw.githubusercontent.com/pacedotdev/oto/master/otohttp/templates/client.js.txt -q -O ./templates/client.js.txt
 ```
 
 Use the `oto` tool to generate a client and server:
 
 ```bash
 mkdir generated
-oto -template ./templates/server.go.plush \
+oto -template ./templates/server.go.txt \
     -out ./generated/oto.gen.go \
     -ignore Ignorer \
     -pkg generated \
     ./definitions
 gofmt -w ./generated/oto.gen.go
-oto -template ./templates/client.js.plush \
+oto -template ./templates/client.js.txt \
     -out ./generated/oto.gen.js \
     -ignore Ignorer \
     ./definitions
@@ -160,7 +160,7 @@ You can provide strings to your templates via the `-params` flag:
 
 ```bash
 oto \
-    -template ./templates/server.go.plush \
+    -template ./templates/server.go.txt \
     -out ./oto.gen.go \
     -params "key1:value1,key2:value2" \
     ./path/to/definition
@@ -212,7 +212,7 @@ or extend those mappings without recompiling by providing a YAML file:
 
 ```
 oto \
-    -template ./templates/client.ts.plush \
+    -template ./templates/client.ts.txt \
     -out ./generated/oto.gen.ts \
     -type-map ./example/type-mapping.yaml \
     ./definitions
@@ -243,10 +243,10 @@ types:
 
 ### Open API
 
-To work on the Open API spec, you might find this command helpful:
+To work on the Open API spec, you might find this command helpful (the example `generate.sh` also emits `example/openapi.yaml`):
 
 ```
-oto -template ./otohttp/templates/openapi.yaml.plush -out openapi.yaml -v -ignore Ignorer ./parser/testdata/services/pleasantries
+oto -template ./otohttp/templates/openapi.yaml.txt -out openapi.yaml -v -ignore Ignorer ./parser/testdata/services/pleasantries
 ```
 
 ## Contributions

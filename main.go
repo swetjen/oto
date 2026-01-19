@@ -34,7 +34,7 @@ flags:`)
 		flags.PrintDefaults()
 	}
 	var (
-		template           = flags.String("template", "", "plush template to render")
+		template           = flags.String("template", "", "text/template file to render")
 		outfile            = flags.String("out", "", "output file (default: stdout)")
 		pkg                = flags.String("pkg", "", "explicit package name (default: inferred)")
 		v                  = flags.Bool("v", false, "verbose output")

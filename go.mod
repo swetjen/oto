@@ -5,7 +5,6 @@ go 1.24.0
 require (
 	github.com/dustin/go-humanize v1.0.0
 	github.com/fatih/structtag v1.2.0
-	github.com/gobuffalo/plush v3.8.3+incompatible
 	github.com/matryer/is v1.4.0
 	github.com/pkg/errors v0.9.1
 	gopkg.in/yaml.v2 v2.2.4

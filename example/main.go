@@ -46,6 +46,15 @@ func main() {
 	server := otohttp.NewServer()
 	RegisterGreeterService(server, greeterService)
 	http.Handle("/oto/", server)
+	http.HandleFunc("/docs", func(w http.ResponseWriter, r *http.Request) {
+		http.Redirect(w, r, "/docs/", http.StatusMovedPermanently)
+	})
+	http.HandleFunc("/docs/", func(w http.ResponseWriter, r *http.Request) {
+		http.ServeFile(w, r, "./docs.html")
+	})
+	http.HandleFunc("/openapi.yaml", func(w http.ResponseWriter, r *http.Request) {
+		http.ServeFile(w, r, "./openapi.yaml")
+	})
 	http.Handle("/", http.FileServer(http.Dir(".")))
 	fmt.Println("listening at http://localhost:8080")
 	log.Fatal(http.ListenAndServe(":8080", nil))

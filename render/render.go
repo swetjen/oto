@@ -4,42 +4,48 @@ import (
 	"bytes"
 	"encoding/json"
 	"go/doc"
-	"html/template"
 	"strings"
+	"text/template"
 
 	"github.com/fatih/structtag"
-	"github.com/gobuffalo/plush"
 	"github.com/pacedotdev/oto/parser"
 	"github.com/pkg/errors"
 )
 
 // Render renders the template using the Definition.
-func Render(template string, def parser.Definition, params map[string]interface{}) (string, error) {
-	if err := validateTypeMappings(template, def); err != nil {
+func Render(tpl string, def parser.Definition, params map[string]interface{}) (string, error) {
+	if err := validateTypeMappings(tpl, def); err != nil {
 		return "", err
 	}
-	ctx := plush.NewContext()
-	ctx.Set("camelize_down", camelizeDown)
-	ctx.Set("camelize_up", camelizeUp)
-	ctx.Set("camelize_up_field", camelizeUpField)
-	ctx.Set("def", def)
-	ctx.Set("params", params)
-	ctx.Set("json", toJSONHelper)
-	ctx.Set("json_inline", toJSONInlineHelper)
-	ctx.Set("format_comment_line", formatCommentLine)
-	ctx.Set("format_comment_text", formatCommentText)
-	ctx.Set("format_comment_html", formatCommentHTML)
-	ctx.Set("format_tags", formatTags)
-	ctx.Set("object_golang", ObjectGolang)
-	ctx.Set("smart_prefix", smartPrefix)
-	s, err := plush.Render(string(template), ctx)
+	funcs := template.FuncMap{
+		"camelize_down":       camelizeDown,
+		"camelize_up":         camelizeUp,
+		"camelize_up_field":   camelizeUpField,
+		"json":                toJSONHelper,
+		"json_inline":         toJSONInlineHelper,
+		"format_comment_line": formatCommentLine,
+		"format_comment_text": formatCommentText,
+		"format_comment_html": formatCommentHTML,
+		"format_tags":         formatTags,
+		"object_golang":       ObjectGolang,
+		"smart_prefix":        smartPrefix,
+	}
+	tmpl, err := template.New("oto").Funcs(funcs).Parse(tpl)
 	if err != nil {
 		return "", err
 	}
-	return s, nil
+	var buf bytes.Buffer
+	data := map[string]interface{}{
+		"def":    def,
+		"params": params,
+	}
+	if err := tmpl.Execute(&buf, data); err != nil {
+		return "", err
+	}
+	return buf.String(), nil
 }
 
-func toJSONHelper(v interface{}, prefix, indent string) (template.HTML, error) {
+func toJSONHelper(v interface{}, prefix, indent string) (string, error) {
 	if indent == "" {
 		indent = "\t"
 	}
@@ -47,39 +53,39 @@ func toJSONHelper(v interface{}, prefix, indent string) (template.HTML, error) {
 	if err != nil {
 		return "", err
 	}
-	return template.HTML(b), nil
+	return string(b), nil
 }
 
-func toJSONInlineHelper(v interface{}) (template.HTML, error) {
+func toJSONInlineHelper(v interface{}) (string, error) {
 	b, err := json.Marshal(v)
 	if err != nil {
 		return "", err
 	}
-	return template.HTML(b), nil
+	return string(b), nil
 }
 
-func formatCommentLine(s string) template.HTML {
+func formatCommentLine(s string) string {
 	var buf bytes.Buffer
 	doc.ToText(&buf, s, "", "", 2000)
 	s = strings.TrimSpace(buf.String())
-	return template.HTML(s)
+	return s
 }
 
-func formatCommentText(s string) template.HTML {
+func formatCommentText(s string) string {
 	var buf bytes.Buffer
 	doc.ToText(&buf, s, "// ", "", 80)
-	return template.HTML(buf.String())
+	return buf.String()
 }
 
-func formatCommentHTML(s string) template.HTML {
+func formatCommentHTML(s string) string {
 	var buf bytes.Buffer
 	doc.ToHTML(&buf, s, nil)
-	return template.HTML(buf.String())
+	return buf.String()
 }
 
 // formatTags formats a list of struct tag strings into one.
 // Will return an error if any of the tag strings are invalid.
-func formatTags(tags ...string) (template.HTML, error) {
+func formatTags(tags ...string) (string, error) {
 	alltags := &structtag.Tags{}
 	for _, tag := range tags {
 		theseTags, err := structtag.Parse(tag)
@@ -95,7 +101,7 @@ func formatTags(tags ...string) (template.HTML, error) {
 		return "", nil
 	}
 	tagsStr = "`" + tagsStr + "`"
-	return template.HTML(tagsStr), nil
+	return tagsStr, nil
 }
 
 // smartPrefix prepends a string before s, allowing for the specific use

@@ -17,8 +17,8 @@ func TestRender(t *testing.T) {
 	params := map[string]interface{}{
 		"Description": "Package services contains services.",
 	}
-	template := `// <%= params["Description"] %>
-package <%= def.PackageName %>`
+	template := `// {{ index .params "Description" }}
+package {{ .def.PackageName }}`
 	s, err := Render(template, def, params)
 	is.NoErr(err)
 	for _, should := range []string{
@@ -45,9 +45,9 @@ func TestRenderCommentsWithQuotes(t *testing.T) {
 		},
 	}
 	template := `
-		<%= for (service) in def.Services { %>
-			<%= format_comment_text(service.Comment) %>type <%= service.Name %> struct
-		<% } %>
+		{{ range $service := .def.Services }}
+			{{ format_comment_text $service.Comment }}type {{ $service.Name }} struct
+		{{ end }}
 	`
 	s, err := Render(template, def, nil)
 	is.NoErr(err)
@@ -80,7 +80,7 @@ func TestRenderTypeValidation(t *testing.T) {
 			},
 		},
 	}
-	template := `<%= for (obj) in def.Objects { %><%= for (field) in obj.Fields { %><%= field.Type.JSType %><% } %><% } %>`
+	template := `{{ range $obj := .def.Objects }}{{ range $field := $obj.Fields }}{{ $field.Type.JSType }}{{ end }}{{ end }}`
 	_, err := Render(template, def, nil)
 	is.True(err != nil)
 	is.True(strings.Contains(err.Error(), "js_type"))
@@ -111,15 +111,15 @@ func TestFormatTags(t *testing.T) {
 
 	tagStr, err := formatTags(`json:"field,omitempty"`)
 	is.NoErr(err)
-	is.Equal(trimBackticks(string(tagStr)), `json:"field,omitempty"`)
+	is.Equal(trimBackticks(tagStr), `json:"field,omitempty"`)
 
 	tagStr, err = formatTags(`json:"field,omitempty" monkey:"true"`)
 	is.NoErr(err)
-	is.Equal(trimBackticks(string(tagStr)), `json:"field,omitempty" monkey:"true"`)
+	is.Equal(trimBackticks(tagStr), `json:"field,omitempty" monkey:"true"`)
 
 	tagStr, err = formatTags(`json:"field,omitempty"`, `monkey:"true"`)
 	is.NoErr(err)
-	is.Equal(trimBackticks(string(tagStr)), `json:"field,omitempty" monkey:"true"`)
+	is.Equal(trimBackticks(tagStr), `json:"field,omitempty" monkey:"true"`)
 
 }
 

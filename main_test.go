@@ -13,7 +13,7 @@ func Test(t *testing.T) {
 	var buf bytes.Buffer
 	args := []string{
 		"oto",
-		"-template=./testdata/template.plush",
+		"-template=./testdata/template.txt",
 		"-pkg=stuff",
 		"./testdata/services/pleasantries",
 	}

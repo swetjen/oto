@@ -29,10 +29,10 @@ func TestExampleGenerateAndBuild(t *testing.T) {
 		_ = os.Chdir(root)
 	})
 
-	serverTemplate := "server.go.plush"
+	serverTemplate := "server.go.txt"
 	serverOut := "server.gen.go"
 	defPath := "./def"
-	clientTemplate := "client.js.plush"
+	clientTemplate := "client.js.txt"
 	clientOut := "client.gen.js"
 	typeMap := "type-mapping.yaml"
 

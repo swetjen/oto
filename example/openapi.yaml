@@ -1,0 +1,167 @@
+openapi: 3.0.3
+info:
+  version: 0.1.0
+  title: Your Oto API
+  description: "Provides programatic access to your Oto services."
+servers:
+  - url: https://somewhere.com/api/v1/
+    description: "API server"
+paths:
+  "/GreeterService.CreateUser":
+    post:
+      summary: "CreateUser registers a new user and returns the stored record."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateUserRequest"
+      responses:
+        '200':
+          description: "A 200, successful response."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/CreateUserResponse"
+        '500':
+          description: "A non-200 response means something went wrong."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+  "/GreeterService.Greet":
+    post:
+      summary: "Greet prepares a lovely greeting."
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/GreetRequest"
+      responses:
+        '200':
+          description: "A 200, successful response."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/GreetResponse"
+        '500':
+          description: "A non-200 response means something went wrong."
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ErrorResponse"
+components:
+  schemas:
+    ErrorResponse:
+      type: object
+      description: "If a request fails, the an ErrorResponse is returned, which contains an Error string explaining what happened."
+      properties:
+        error:
+          type: string
+          description: "A human readable description of what went wrong."
+    Address:
+      type: object
+      properties:
+        line1:
+          description: ""
+          example: null
+          type: string
+        line2:
+          description: ""
+          example: null
+          type: string
+        city:
+          description: ""
+          example: null
+          type: string
+        region:
+          description: ""
+          example: null
+          type: string
+        postalCode:
+          description: ""
+          example: null
+          type: string
+        country:
+          description: ""
+          example: null
+          type: string
+    CreateUserRequest:
+      type: object
+      properties:
+        user:
+          description: ""
+          $ref: "#/components/schemas/User"
+        invitedBy:
+          description: ""
+          example: null
+          type: UUID
+        requestedAt:
+          description: ""
+          example: null
+          type: DateTime
+    CreateUserResponse:
+      type: object
+      properties:
+        user:
+          description: ""
+          $ref: "#/components/schemas/User"
+        welcomeMessage:
+          description: ""
+          example: null
+          type: string
+    GreetRequest:
+      type: object
+      properties:
+        name:
+          description: "Name is the person to greet.\nIt is required."
+          example: null
+          type: string
+    GreetResponse:
+      type: object
+      properties:
+        greeting:
+          description: "Greeting is a nice message welcoming somebody."
+          example: null
+          type: string
+    User:
+      type: object
+      properties:
+        id:
+          description: ""
+          example: null
+          type: UUID
+        name:
+          description: ""
+          example: null
+          type: string
+        email:
+          description: ""
+          example: null
+          type: string
+        type:
+          description: ""
+          example: null
+          type: UserType
+        address:
+          description: ""
+          $ref: "#/components/schemas/Address"
+        createdAt:
+          description: ""
+          example: null
+          type: DateTime
+        lastLoginAt:
+          description: ""
+          example: null
+          type: DateTime
+        tags:
+          description: ""
+          example: null
+          type: array
+          items:
+            type: string
+        metadata:
+          description: ""
+          example: null
+          type: map[string]string

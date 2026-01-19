@@ -11,7 +11,6 @@ import (
 
 // GreeterService is a polite API for greeting people.
 type GreeterService interface {
-
 	// CreateUser registers a new user and returns the stored record.
 	CreateUser(context.Context, CreateUserRequest) (*CreateUserResponse, error)
 	// Greet prepares a lovely greeting.
@@ -29,10 +28,12 @@ func RegisterGreeterService(server *otohttp.Server, greeterService GreeterServic
 		server:         server,
 		greeterService: greeterService,
 	}
-	server.Register("GreeterService", "CreateUser", handler.handleCreateUser)
-	server.Register("GreeterService", "Greet", handler.handleGreet)
-}
 
+	server.Register("GreeterService", "CreateUser", handler.handleCreateUser)
+
+	server.Register("GreeterService", "Greet", handler.handleGreet)
+
+}
 func (s *greeterServiceServer) handleCreateUser(w http.ResponseWriter, r *http.Request) {
 	var request CreateUserRequest
 	if err := otohttp.Decode(r, &request); err != nil {
@@ -49,7 +50,6 @@ func (s *greeterServiceServer) handleCreateUser(w http.ResponseWriter, r *http.R
 		return
 	}
 }
-
 func (s *greeterServiceServer) handleGreet(w http.ResponseWriter, r *http.Request) {
 	var request GreetRequest
 	if err := otohttp.Decode(r, &request); err != nil {
@@ -91,14 +91,12 @@ type CreateUserResponse struct {
 }
 
 // GreetRequest is the request object for GreeterService.Greet.
-type GreetRequest struct {
-	// Name is the person to greet. It is required.
+type GreetRequest struct { // Name is the person to greet. It is required.
 	Name string `json:"name"`
 }
 
 // GreetResponse is the response object containing a person's greeting.
-type GreetResponse struct {
-	// Greeting is a nice message welcoming somebody.
+type GreetResponse struct { // Greeting is a nice message welcoming somebody.
 	Greeting string `json:"greeting"`
 }
 

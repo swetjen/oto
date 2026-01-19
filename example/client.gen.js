@@ -5,112 +5,33 @@
 /**
  * Errors thrown by client methods include network failures or server errors.
  */
-
-
-
 /**
  * @typedef {Object} GreeterServiceCreateUserRequest
-
-
-
-
-
  * @property {object} user
-
  * @property {string} invitedBy
-
  * @property {DateTime} requestedAt
-
-
-
-
-
-
-
-
-
-
-
  */
 /**
  * @typedef {Object} GreeterServiceCreateUserResponse
-
-
-
-
-
-
-
  * @property {object} user
-
  * @property {string} welcomeMessage
-
-
-
-
-
-
-
-
-
  */
-
 /**
  * @typedef {Object} GreeterServiceGreetRequest
-
-
-
-
-
-
-
-
-
  * @property {string} name - Name is the person to greet. It is required.
-
-
-
-
-
-
-
  */
 /**
  * @typedef {Object} GreeterServiceGreetResponse
-
-
-
-
-
-
-
-
-
-
-
  * @property {string} greeting - Greeting is a nice message welcoming somebody.
-
-
-
-
-
  */
 
-
-
 const client = {
-
-	
 	/**
 	 * GreeterService is a polite API for greeting people.
 	 */
-	
 	GreeterService: {
-		
 		/**
-		
 		 * CreateUser registers a new user and returns the stored record.
-		
 		 * @param {GreeterServiceCreateUserRequest} [request]
 		 * @returns {Promise<GreeterServiceCreateUserResponse>}
 		 */
@@ -146,11 +67,8 @@ const client = {
 			}
 			return json || {}
 		}
-		
 		/**
-		
 		 * Greet prepares a lovely greeting.
-		
 		 * @param {GreeterServiceGreetRequest} [request]
 		 * @returns {Promise<GreeterServiceGreetResponse>}
 		 */
@@ -186,7 +104,5 @@ const client = {
 			}
 			return json || {}
 		}
-		
 	},
-
 }
