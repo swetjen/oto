@@ -6,6 +6,7 @@ import (
 	"io"
 	"log"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/pacedotdev/oto/otohttp"
@@ -41,10 +42,33 @@ func (greeterService) CreateUser(ctx context.Context, r CreateUserRequest) (*Cre
 	return resp, nil
 }
 
+const demoAuthToken = "demo-token"
+
+type bearerGuard struct{}
+
+func (bearerGuard) Authorize(ctx context.Context, r *http.Request, spec AuthSpec) error {
+	header := r.Header.Get(spec.Name)
+	if header == "" {
+		return fmt.Errorf("missing auth token")
+	}
+	token := header
+	if spec.Prefix != "" {
+		prefix := spec.Prefix + " "
+		if !strings.HasPrefix(header, prefix) {
+			return fmt.Errorf("invalid auth token")
+		}
+		token = strings.TrimPrefix(header, prefix)
+	}
+	if token != demoAuthToken {
+		return fmt.Errorf("invalid auth token")
+	}
+	return nil
+}
+
 func main() {
 	var greeterService greeterService
 	server := otohttp.NewServer()
-	RegisterGreeterService(server, greeterService)
+	RegisterGreeterServiceWithAuth(server, greeterService, bearerGuard{})
 	http.Handle("/oto/", server)
 	http.HandleFunc("/docs", func(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/docs/", http.StatusMovedPermanently)

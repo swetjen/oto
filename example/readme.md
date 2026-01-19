@@ -17,6 +17,8 @@ go run *.go
 Open http://localhost:8080
 Open http://localhost:8080/docs for Swagger UI with the generated OpenAPI spec.
 
+The example uses a demo bearer token (`demo-token`) that is sent from `index.html` and checked by the server.
+
 ## Exercise
 
 1. Add a new service interface to the `def` package.

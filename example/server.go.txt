@@ -12,6 +12,21 @@ import (
 	{{- end }}
 )
 
+{{- if gt (len (auth_specs .def)) 0 }}
+// AuthSpec describes request authentication metadata.
+type AuthSpec struct {
+	Scheme string
+	In     string
+	Name   string
+	Prefix string
+}
+
+// AuthGuard authorizes a request using the auth metadata declared on requests.
+type AuthGuard interface {
+	Authorize(ctx context.Context, r *http.Request, spec AuthSpec) error
+}
+{{ end }}
+
 {{- range $service := .def.Services }}
 {{ format_comment_text $service.Comment }}type {{ $service.Name }} interface {
 {{- range $method := $service.Methods }}
@@ -23,13 +38,26 @@ import (
 type {{ camelize_down $service.Name }}Server struct {
 	server *otohttp.Server
 	{{ camelize_down $service.Name }} {{ $service.Name }}
+	{{- if gt (len (auth_specs $.def)) 0 }}
+	authGuard AuthGuard
+	{{- end }}
 }
 
 // Register adds the {{ $service.Name }} to the otohttp.Server.
 func Register{{ $service.Name }}(server *otohttp.Server, {{ camelize_down $service.Name }} {{ $service.Name }}) {
+	{{- if gt (len (auth_specs $.def)) 0 }}
+	Register{{ $service.Name }}WithAuth(server, {{ camelize_down $service.Name }}, nil)
+}
+
+// Register{{ $service.Name }}WithAuth adds the {{ $service.Name }} to the otohttp.Server with an auth guard.
+func Register{{ $service.Name }}WithAuth(server *otohttp.Server, {{ camelize_down $service.Name }} {{ $service.Name }}, guard AuthGuard) {
+	{{- end }}
 	handler := &{{ camelize_down $service.Name }}Server{
 		server: server,
 		{{ camelize_down $service.Name }}: {{ camelize_down $service.Name }},
+		{{- if gt (len (auth_specs $.def)) 0 }}
+		authGuard: guard,
+		{{- end }}
 	}
 	{{ range $method := $service.Methods }}
 	server.Register("{{ $service.Name }}", "{{ $method.Name }}", handler.handle{{ $method.Name }})
@@ -37,6 +65,20 @@ func Register{{ $service.Name }}(server *otohttp.Server, {{ camelize_down $servi
 }
 {{- range $method := $service.Methods }}
 func (s *{{ camelize_down $service.Name }}Server) handle{{ $method.Name }}(w http.ResponseWriter, r *http.Request) {
+	{{- $authSpec := auth_spec_for $.def $method }}
+	{{- if $authSpec }}
+	if s.authGuard != nil {
+		if err := s.authGuard.Authorize(r.Context(), r, AuthSpec{
+			Scheme: "{{ $authSpec.Scheme }}",
+			In: "{{ $authSpec.In }}",
+			Name: "{{ $authSpec.Name }}",
+			Prefix: "{{ $authSpec.Prefix }}",
+		}); err != nil {
+			s.server.OnErr(w, r, err)
+			return
+		}
+	}
+	{{- end }}
 	var request {{ $method.InputObject.TypeName }}
 	if err := otohttp.Decode(r, &request); err != nil {
 		s.server.OnErr(w, r, err)

@@ -9,6 +9,19 @@ import (
 	"github.com/pacedotdev/oto/otohttp"
 )
 
+// AuthSpec describes request authentication metadata.
+type AuthSpec struct {
+	Scheme string
+	In     string
+	Name   string
+	Prefix string
+}
+
+// AuthGuard authorizes a request using the auth metadata declared on requests.
+type AuthGuard interface {
+	Authorize(ctx context.Context, r *http.Request, spec AuthSpec) error
+}
+
 // GreeterService is a polite API for greeting people.
 type GreeterService interface {
 	// CreateUser registers a new user and returns the stored record.
@@ -20,13 +33,20 @@ type GreeterService interface {
 type greeterServiceServer struct {
 	server         *otohttp.Server
 	greeterService GreeterService
+	authGuard      AuthGuard
 }
 
 // Register adds the GreeterService to the otohttp.Server.
 func RegisterGreeterService(server *otohttp.Server, greeterService GreeterService) {
+	RegisterGreeterServiceWithAuth(server, greeterService, nil)
+}
+
+// RegisterGreeterServiceWithAuth adds the GreeterService to the otohttp.Server with an auth guard.
+func RegisterGreeterServiceWithAuth(server *otohttp.Server, greeterService GreeterService, guard AuthGuard) {
 	handler := &greeterServiceServer{
 		server:         server,
 		greeterService: greeterService,
+		authGuard:      guard,
 	}
 
 	server.Register("GreeterService", "CreateUser", handler.handleCreateUser)
@@ -51,6 +71,17 @@ func (s *greeterServiceServer) handleCreateUser(w http.ResponseWriter, r *http.R
 	}
 }
 func (s *greeterServiceServer) handleGreet(w http.ResponseWriter, r *http.Request) {
+	if s.authGuard != nil {
+		if err := s.authGuard.Authorize(r.Context(), r, AuthSpec{
+			Scheme: "BearerAuth",
+			In:     "header",
+			Name:   "Authorization",
+			Prefix: "Bearer",
+		}); err != nil {
+			s.server.OnErr(w, r, err)
+			return
+		}
+	}
 	var request GreetRequest
 	if err := otohttp.Decode(r, &request); err != nil {
 		s.server.OnErr(w, r, err)
@@ -91,7 +122,9 @@ type CreateUserResponse struct {
 }
 
 // GreetRequest is the request object for GreeterService.Greet.
-type GreetRequest struct { // Name is the person to greet. It is required.
+type GreetRequest struct { // Auth is the bearer token for this request.
+	Auth string `json:"auth"`
+	// Name is the person to greet. It is required.
 	Name string `json:"name"`
 }
 

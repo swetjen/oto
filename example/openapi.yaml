@@ -32,6 +32,8 @@ paths:
   "/GreeterService.Greet":
     post:
       summary: "Greet prepares a lovely greeting."
+      security:
+        - BearerAuth: []
       requestBody:
         required: true
         content:
@@ -52,6 +54,12 @@ paths:
               schema:
                 $ref: "#/components/schemas/ErrorResponse"
 components:
+  securitySchemes:
+    BearerAuth:
+      type: apiKey
+      in: header
+      name: Authorization
+      x-otoauth-prefix: "Bearer"
   schemas:
     ErrorResponse:
       type: object

@@ -18,6 +18,7 @@
  */
 /**
  * @typedef {Object} GreeterServiceGreetRequest
+ * @property {string} auth - Auth is the bearer token for this request.
  * @property {string} name - Name is the person to greet. It is required.
  */
 /**
@@ -41,11 +42,13 @@ const client = {
 				'Accept-Encoding':	'gzip',
 				'Content-Type':		'application/json',
 			}
+			let url = '/oto/GreeterService.CreateUser'
 			request = request || {}
-			const response = await fetch('/oto/GreeterService.CreateUser', {
+			const body = Object.assign({}, request)
+			const response = await fetch(url, {
 				method: 'POST',
 				headers: headers,
-				body: JSON.stringify(request)
+				body: JSON.stringify(body)
 			})
 			const text = await response.text()
 			let json = null
@@ -78,11 +81,21 @@ const client = {
 				'Accept-Encoding':	'gzip',
 				'Content-Type':		'application/json',
 			}
+			let url = '/oto/GreeterService.Greet'
 			request = request || {}
-			const response = await fetch('/oto/GreeterService.Greet', {
+			const body = Object.assign({}, request)
+			const authValue = request.auth
+			if (authValue) {
+				const authHeader = "Bearer " + authValue
+				headers['Authorization'] = authHeader
+			}
+			if (Object.prototype.hasOwnProperty.call(body, 'auth')) {
+				delete body.auth
+			}
+			const response = await fetch(url, {
 				method: 'POST',
 				headers: headers,
-				body: JSON.stringify(request)
+				body: JSON.stringify(body)
 			})
 			const text = await response.text()
 			let json = null

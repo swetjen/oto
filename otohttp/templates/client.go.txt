@@ -10,6 +10,9 @@ import (
 	"io"
 	"io/ioutil"
 	"net/http"
+	{{- if auth_in_query .def }}
+	"net/url"
+	{{- end }}
 	"strings"
 	"time"
 	"fmt"
@@ -63,6 +66,26 @@ func New{{ $service.Name }}(client *Client) *{{ $service.Name }} {
 		return nil, errors.Wrap(err, "{{ $service.Name }}.{{ $method.Name }}: marshal {{ $method.InputObject.TypeName }}")
 	}
 	url := s.client.RemoteHost + "{{ $service.Name }}.{{ $method.Name }}"
+	{{- $authField := auth_field_for $.def $method }}
+	{{- $authSpec := auth_spec_for $.def $method }}
+	{{- if $authSpec }}
+	{{- if eq $authSpec.In "query" }}
+	if r.{{ $authField.Name }} != "" {
+		u, err := url.Parse(url)
+		if err != nil {
+			return nil, errors.Wrap(err, "{{ $service.Name }}.{{ $method.Name }}: parse url")
+		}
+		q := u.Query()
+		authValue := r.{{ $authField.Name }}
+		{{- if ne $authSpec.Prefix "" }}
+		authValue = "{{ $authSpec.Prefix }} " + authValue
+		{{- end }}
+		q.Set("{{ $authSpec.Name }}", authValue)
+		u.RawQuery = q.Encode()
+		url = u.String()
+	}
+	{{- end }}
+	{{- end }}
 	s.client.Debug(fmt.Sprintf("POST %s", url))
 	s.client.Debug(fmt.Sprintf(">> %s", string(requestBodyBytes)))
 	req, err := http.NewRequest(http.MethodPost, url, bytes.NewReader(requestBodyBytes))
@@ -71,6 +94,29 @@ func New{{ $service.Name }}(client *Client) *{{ $service.Name }} {
 	}
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Accept-Encoding", "gzip")
+	{{- if $authSpec }}
+	{{- if eq $authSpec.In "header" }}
+	if r.{{ $authField.Name }} != "" {
+		authValue := r.{{ $authField.Name }}
+		{{- if ne $authSpec.Prefix "" }}
+		authValue = "{{ $authSpec.Prefix }} " + authValue
+		{{- end }}
+		req.Header.Set("{{ $authSpec.Name }}", authValue)
+	}
+	{{- end }}
+	{{- if eq $authSpec.In "cookie" }}
+	if r.{{ $authField.Name }} != "" {
+		authValue := r.{{ $authField.Name }}
+		{{- if ne $authSpec.Prefix "" }}
+		authValue = "{{ $authSpec.Prefix }} " + authValue
+		{{- end }}
+		req.AddCookie(&http.Cookie{
+			Name: "{{ $authSpec.Name }}",
+			Value: authValue,
+		})
+	}
+	{{- end }}
+	{{- end }}
 	req = req.WithContext(ctx)
 	if s.client.BeforeRequest != nil {
 		err = s.client.BeforeRequest(req)
