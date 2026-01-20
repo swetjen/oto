@@ -26,34 +26,7 @@ class Client:
 			'Content-Type': 'application/json; charset=utf8',
 			'X-API-Key': self.client.apiKey,
 		}
-		body = {{ $method.InputObject.ObjectNameLowerCamel }}
-		{{- $authField := auth_field_for $.def $method }}
-		{{- $authSpec := auth_spec_for $.def $method }}
-		{{- if $authSpec }}
-		auth_value = None
-		if isinstance({{ $method.InputObject.ObjectNameLowerCamel }}, dict):
-			auth_value = {{ $method.InputObject.ObjectNameLowerCamel }}.get("{{ $authField.NameLowerCamel }}")
-			body = dict({{ $method.InputObject.ObjectNameLowerCamel }})
-			body.pop("{{ $authField.NameLowerCamel }}", None)
-		params = None
-		cookies = None
-		if auth_value:
-			{{- if eq $authSpec.In "header" }}
-			auth_header = {{ if ne $authSpec.Prefix "" }}"{{ $authSpec.Prefix }} " + {{ end }}auth_value
-			headers["{{ $authSpec.Name }}"] = auth_header
-			{{- end }}
-			{{- if eq $authSpec.In "query" }}
-			auth_query = {{ if ne $authSpec.Prefix "" }}"{{ $authSpec.Prefix }} " + {{ end }}auth_value
-			params = {"{{ $authSpec.Name }}": auth_query}
-			{{- end }}
-			{{- if eq $authSpec.In "cookie" }}
-			auth_cookie = {{ if ne $authSpec.Prefix "" }}"{{ $authSpec.Prefix }} " + {{ end }}auth_value
-			cookies = {"{{ $authSpec.Name }}": auth_cookie}
-			{{- end }}
-		r = requests.post(url, json=body, headers=headers, params=params, cookies=cookies)
-		{{- else }}
-		r = requests.post(url, json=body, headers=headers)
-		{{- end }}
+		r = requests.post(url, json={{ $method.InputObject.ObjectNameLowerCamel }}, headers=headers)
 		if r.status_code != 200:
 			err = None
 			try:

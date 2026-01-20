@@ -49,37 +49,15 @@ class {{ $service.Name }}Service {
 	});
 {{- range $method := $service.Methods }}
 	Future<{{ $method.OutputObject.TypeName }}> {{ camelize_down $method.Name }}({{ $method.InputObject.TypeName }} request) async {
-		final headers = {
-			'Content-Type': 'application/json; charset=utf-8',
-			'Accept': 'application/json',
-			'Agent': 'otohttp-dart-client/0.1.0',
-			'Authorization': Client.getAuthorizationHeader(),
-		};
-		final queryParameters = <String, dynamic>{};
-		{{- $authField := auth_field_for $.def $method }}
-		{{- $authSpec := auth_spec_for $.def $method }}
-		{{- if $authSpec }}
-		final authValue = request.{{ camelize_down $authField.Name }};
-		if (authValue != null && authValue.toString().isNotEmpty) {
-			{{- if eq $authSpec.In "header" }}
-			final authHeader = {{ if ne $authSpec.Prefix "" }}"{{ $authSpec.Prefix }} " + {{ end }}authValue.toString();
-			headers["{{ $authSpec.Name }}"] = authHeader;
-			{{- end }}
-			{{- if eq $authSpec.In "query" }}
-			final authQuery = {{ if ne $authSpec.Prefix "" }}"{{ $authSpec.Prefix }} " + {{ end }}authValue.toString();
-			queryParameters["{{ $authSpec.Name }}"] = authQuery;
-			{{- end }}
-			{{- if eq $authSpec.In "cookie" }}
-			final authCookie = {{ if ne $authSpec.Prefix "" }}"{{ $authSpec.Prefix }} " + {{ end }}authValue.toString();
-			headers["Cookie"] = "{{ $authSpec.Name }}=" + authCookie;
-			{{- end }}
-		}
-		{{- end }}
 		final response = await Client.httpClient.post(
 			'${Client.endpoint}/{{ $service.Name }}/{{ $method.Name }}',
 			data: request.toJson(),
-			queryParameters: queryParameters,
-			options: Options(headers: headers)
+			options: Options(headers: {
+				'Content-Type': 'application/json; charset=utf-8',
+				'Accept': 'application/json',
+				'Agent': 'otohttp-dart-client/0.1.0',
+				'Authorization': Client.getAuthorizationHeader(),
+			})
 		);
 		if (response.statusCode != 200) {
 			if (response.data is Map && response.data['error'] != null) {
@@ -118,8 +96,8 @@ class {{ $object.Name }} {
 	}
 
 	Map<String, dynamic> toJson() {
-		return { {{ range $field := $object.Fields }}{{ if not $field.Auth }}
-			'{{ camelize_down $field.Name }}': {{ camelize_down $field.Name }},{{ end }}{{ end }}
+		return { {{ range $field := $object.Fields }}
+			'{{ camelize_down $field.Name }}': {{ camelize_down $field.Name }},{{ end }}
 		};
 	}
 

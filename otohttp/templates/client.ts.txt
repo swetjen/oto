@@ -24,7 +24,6 @@ export class Client {
 		if ({{ camelize_down $method.InputObject.TSType }} == null) {
 			{{ camelize_down $method.InputObject.TSType }} = new {{ $method.InputObject.TSType }}();
 		}
-		let url = this.client.basepath + '{{ $service.Name }}.{{ $method.Name }}'
 		const headers: Headers = new Headers();
 		headers.set('Accept', 'application/json');
 		headers.set('Content-Type', 'application/json');
@@ -34,36 +33,10 @@ export class Client {
 		if (modifyHeaders) {
 			await modifyHeaders(headers)
 		}
-		const body: any = { ...{{ camelize_down $method.InputObject.TSType }} }
-		{{- $authField := auth_field_for $.def $method }}
-		{{- $authSpec := auth_spec_for $.def $method }}
-		{{- if $authSpec }}
-		const authValue = ({{ camelize_down $method.InputObject.TSType }} as any).{{ $authField.NameLowerCamel }}
-		if (authValue) {
-			{{- if eq $authSpec.In "header" }}
-			const authHeader = {{ if ne $authSpec.Prefix "" }}"{{ $authSpec.Prefix }} " + {{ end }}authValue
-			headers.set('{{ $authSpec.Name }}', authHeader)
-			{{- end }}
-			{{- if eq $authSpec.In "query" }}
-			const sep = url.includes('?') ? '&' : '?'
-			url = url + sep + encodeURIComponent('{{ $authSpec.Name }}') + '=' + encodeURIComponent({{ if ne $authSpec.Prefix "" }}"{{ $authSpec.Prefix }} " + {{ end }}authValue)
-			{{- end }}
-			{{- if eq $authSpec.In "cookie" }}
-			const cookieValue = encodeURIComponent({{ if ne $authSpec.Prefix "" }}"{{ $authSpec.Prefix }} " + {{ end }}authValue)
-			document.cookie = '{{ $authSpec.Name }}=' + cookieValue + '; path=/'
-			{{- end }}
-		}
-		delete body.{{ $authField.NameLowerCamel }}
-		{{- end }}
-		const response = await fetch(url, {
+		const response = await fetch(this.client.basepath + '{{ $service.Name }}.{{ $method.Name }}', {
 			method: 'POST',
 			headers: headers,
-			{{- if $authSpec }}
-			{{- if eq $authSpec.In "cookie" }}
-			credentials: 'same-origin',
-			{{- end }}
-			{{- end }}
-			body: JSON.stringify(body),
+			body: JSON.stringify({{ camelize_down $method.InputObject.TSType }}),
 		})
 		const text = await response.text();
 		let json: any = null;

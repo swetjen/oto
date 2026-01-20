@@ -53,40 +53,11 @@ const client = {
 				'Accept-Encoding':	'gzip',
 				'Content-Type':		'application/json',
 			}
-			let url = '/oto/{{ $service.Name }}.{{ $method.Name }}'
 			request = request || {}
-			const body = Object.assign({}, request)
-			{{- $authField := auth_field_for $.def $method }}
-			{{- $authSpec := auth_spec_for $.def $method }}
-			{{- if $authSpec }}
-			const authValue = request.{{ $authField.NameLowerCamel }}
-			if (authValue) {
-				{{- if eq $authSpec.In "header" }}
-				const authHeader = {{ if ne $authSpec.Prefix "" }}"{{ $authSpec.Prefix }} " + {{ end }}authValue
-				headers['{{ $authSpec.Name }}'] = authHeader
-				{{- end }}
-				{{- if eq $authSpec.In "query" }}
-				const sep = url.includes('?') ? '&' : '?'
-				url = url + sep + encodeURIComponent('{{ $authSpec.Name }}') + '=' + encodeURIComponent({{ if ne $authSpec.Prefix "" }}"{{ $authSpec.Prefix }} " + {{ end }}authValue)
-				{{- end }}
-				{{- if eq $authSpec.In "cookie" }}
-				const cookieValue = encodeURIComponent({{ if ne $authSpec.Prefix "" }}"{{ $authSpec.Prefix }} " + {{ end }}authValue)
-				document.cookie = '{{ $authSpec.Name }}=' + cookieValue + '; path=/'
-				{{- end }}
-			}
-			if (Object.prototype.hasOwnProperty.call(body, '{{ $authField.NameLowerCamel }}')) {
-				delete body.{{ $authField.NameLowerCamel }}
-			}
-			{{- end }}
-			const response = await fetch(url, {
+			const response = await fetch('/oto/{{ $service.Name }}.{{ $method.Name }}', {
 				method: 'POST',
 				headers: headers,
-				{{- if $authSpec }}
-				{{- if eq $authSpec.In "cookie" }}
-				credentials: 'same-origin',
-				{{- end }}
-				{{- end }}
-				body: JSON.stringify(body)
+				body: JSON.stringify(request)
 			})
 			const text = await response.text()
 			let json = null

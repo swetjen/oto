@@ -11,8 +11,6 @@ type GreeterService interface {
 
 // GreetRequest is the request object for GreeterService.Greet.
 type GreetRequest struct {
-	// Auth is the bearer token for this request.
-	Auth string `otoauth:"scheme=BearerAuth,in=header,name=Authorization,prefix=Bearer" json:"-"`
 	// Name is the person to greet.
 	// It is required.
 	Name string

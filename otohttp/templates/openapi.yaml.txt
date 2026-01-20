@@ -12,11 +12,6 @@ paths:
   "/{{ $service.Name }}.{{ $method.Name }}":
     post:
       summary: {{ json_inline $method.Comment }}
-{{- $authSpec := auth_spec_for $.def $method }}
-{{- if $authSpec }}
-      security:
-        - {{ $authSpec.Scheme }}: []
-{{- end }}
       requestBody:
         required: true
         content:
@@ -39,18 +34,6 @@ paths:
 {{- end }}
 {{- end }}
 components:
-{{- if gt (len (auth_specs .def)) 0 }}
-  securitySchemes:
-{{- range $spec := auth_specs .def }}
-    {{ $spec.Scheme }}:
-      type: apiKey
-      in: {{ $spec.In }}
-      name: {{ $spec.Name }}
-{{- if ne $spec.Prefix "" }}
-      x-otoauth-prefix: "{{ $spec.Prefix }}"
-{{- end }}
-{{- end }}
-{{- end }}
   schemas:
     ErrorResponse:
       type: object
@@ -62,12 +45,11 @@ components:
 {{- range $object := .def.Objects }}
     {{ $object.Name }}:
       type: object
-{{- $fields := non_auth_fields $object }}
-{{- if eq (len $fields) 0 }}
+{{- if eq (len $object.Fields) 0 }}
       properties: {}
 {{- else }}
       properties:
-{{- range $field := $fields }}
+{{- range $field := $object.Fields }}
         {{ camelize_down $field.Name }}:
           description: {{ json_inline $field.Comment }}
 {{- if not $field.Type.IsObject }}

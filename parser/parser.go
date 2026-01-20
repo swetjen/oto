@@ -152,7 +152,6 @@ type Field struct {
 	Comment        string              `json:"comment"`
 	Tag            string              `json:"tag"`
 	ParsedTags     map[string]FieldTag `json:"parsedTags"`
-	Auth           *AuthSpec           `json:"auth,omitempty"`
 	Example        interface{}         `json:"example"`
 	// Metadata are typed key/value pairs extracted from the
 	// comments.
@@ -166,14 +165,6 @@ type FieldTag struct {
 	Value string `json:"value"`
 	// Options are the options for the tag.
 	Options []string `json:"options"`
-}
-
-// AuthSpec describes request authentication metadata.
-type AuthSpec struct {
-	Scheme string `json:"scheme"`
-	In     string `json:"in"`
-	Name   string `json:"name"`
-	Prefix string `json:"prefix"`
 }
 
 // FieldType holds information about the type of data that this
@@ -405,15 +396,6 @@ func (p *Parser) parseObject(pkg *packages.Package, o types.Object, v *types.Str
 			}
 		}
 	}
-	var authFields int
-	for _, field := range obj.Fields {
-		if field.Auth != nil {
-			authFields++
-		}
-	}
-	if authFields > 1 {
-		return p.wrapErr(errors.New(obj.Name+" has multiple otoauth fields"), pkg, o.Pos())
-	}
 	p.def.Objects = append(p.def.Objects, obj)
 	p.objects[obj.Name] = struct{}{}
 	return nil
@@ -442,7 +424,7 @@ func (p *Parser) parseField(pkg *packages.Package, objectName string, v *types.V
 	if tag != "" {
 		fieldTag := reflect.StructTag(tag)
 		jsonTag := fieldTag.Get("json")
-		if jsonTag != "" && jsonTag != "-" {
+		if jsonTag != "" {
 			f.NameLowerCamel = strings.Split(jsonTag, ",")[0]
 		}
 	}
@@ -459,59 +441,11 @@ func (p *Parser) parseField(pkg *packages.Package, objectName string, v *types.V
 	if example, ok := f.Metadata["example"]; ok {
 		f.Example = example
 	}
-	if tag != "" {
-		authSpec, err := parseAuthSpec(tag)
-		if err != nil {
-			return f, err
-		}
-		f.Auth = authSpec
-	}
 	f.Type, err = p.parseFieldType(pkg, v)
 	if err != nil {
 		return f, errors.Wrap(err, "parse type")
 	}
 	return f, nil
-}
-
-func parseAuthSpec(tag string) (*AuthSpec, error) {
-	fieldTag := reflect.StructTag(tag)
-	authTag := fieldTag.Get("otoauth")
-	if authTag == "" {
-		return nil, nil
-	}
-	if fieldTag.Get("json") != "-" {
-		return nil, errors.New("otoauth field must have json:\"-\"")
-	}
-	spec := AuthSpec{}
-	parts := strings.Split(authTag, ",")
-	for _, part := range parts {
-		part = strings.TrimSpace(part)
-		if part == "" {
-			continue
-		}
-		kv := strings.SplitN(part, "=", 2)
-		if len(kv) != 2 {
-			return nil, errors.New("invalid otoauth tag entry: " + part)
-		}
-		key := strings.TrimSpace(kv[0])
-		val := strings.TrimSpace(kv[1])
-		switch key {
-		case "scheme":
-			spec.Scheme = val
-		case "in":
-			spec.In = val
-		case "name":
-			spec.Name = val
-		case "prefix":
-			spec.Prefix = val
-		default:
-			return nil, errors.New("invalid otoauth tag key: " + key)
-		}
-	}
-	if spec.Scheme == "" || spec.In == "" || spec.Name == "" {
-		return nil, errors.New("otoauth tag requires scheme, in, and name")
-	}
-	return &spec, nil
 }
 
 func (p *Parser) parseFieldType(pkg *packages.Package, obj types.Object) (FieldType, error) {
