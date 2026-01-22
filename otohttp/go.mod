@@ -1,6 +1,6 @@
 module github.com/pacedotdev/oto/otohttp
 
-go 1.13
+go 1.25
 
 require (
 	github.com/matryer/is v1.4.0
