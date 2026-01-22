@@ -37,6 +37,16 @@ func RunServer() error {
 			Tags:    []string{"states"},
 		}),
 	)
+	router.HandleTyped(
+		"GET /api/v1/secure/states/{code}",
+		otohttp.Wrap(http.HandlerFunc(StateByCodeSecure), nil, StateResponse{}, otohttp.HandlerMeta{
+			Service: "States",
+			Method:  "GetByCodeSecure",
+			Summary: "Get state by code (bearer token required)",
+			Tags:    []string{"states"},
+		}),
+		bearerGuard{},
+	)
 
 	if err := writeOpenAPI(router, "openapi.json"); err != nil {
 		return err

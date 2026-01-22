@@ -52,6 +52,27 @@ func StateByCode(w http.ResponseWriter, r *http.Request) {
 	Encode(w, r, http.StatusBadRequest, response)
 }
 
+func StateByCodeSecure(w http.ResponseWriter, r *http.Request) {
+	var response StateResponse
+	code := r.PathValue("code")
+	if code == "" {
+		response.Error = "code is required"
+		Encode(w, r, http.StatusBadRequest, response)
+		return
+	}
+
+	for _, state := range mockData {
+		if state.Code == code {
+			response.State = state
+			Encode(w, r, http.StatusOK, response)
+			return
+		}
+	}
+
+	response.Error = "code not found"
+	Encode(w, r, http.StatusBadRequest, response)
+}
+
 var mockData = []State{
 	{
 		ID:   1,
