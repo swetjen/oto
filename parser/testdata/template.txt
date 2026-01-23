@@ -1,2 +1,0 @@
-{{ range $service := .def.Services }}{{ range $method := $service.Methods }}{{ $service.Name }}.{{ $method.Name }}
-{{ end }}{{ end }}

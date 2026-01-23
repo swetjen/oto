@@ -1,4 +1,4 @@
-# Oto Runtime Spec (Draft v1)
+# Virtuous Runtime Spec (Draft v0.0.1)
 
 ## Core goals
 - No CLI. All metadata is discovered at runtime via reflection.
@@ -134,14 +134,14 @@ func Wrap(handler http.Handler, req any, resp any, meta HandlerMeta) TypedHandle
 ## Usage example (main.go)
 
 ```
-router := otohttp.NewRouter()
+router := virtuous.NewRouter()
 
-bearer := otohttp.NewBearerGuard("Authorization", "Bearer")
+bearer := bearerGuard{}
 // implements Guard interface with Spec()+Middleware()
 
 router.HandleTyped(
   "POST /oto/GreeterService.Greet",
-  otohttp.Wrap(greetHandler, GreetRequest{}, GreetResponse{}, otohttp.HandlerMeta{
+  virtuous.Wrap(greetHandler, GreetRequest{}, GreetResponse{}, virtuous.HandlerMeta{
     Service: "GreeterService",
     Method: "Greet",
     Summary: "Prepare a greeting",

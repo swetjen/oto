@@ -1,8 +1,7 @@
-module github.com/pacedotdev/oto/example2
+module github.com/pacedotdev/virtuous/reference
 
-go 1.14
+go 1.22
 
-require (
-	github.com/pacedotdev/oto/otohttp v0.4.1
-	github.com/pkg/errors v0.9.1 // indirect
-)
+require github.com/pacedotdev/virtuous v0.0.0
+
+replace github.com/pacedotdev/virtuous => ../virtuous

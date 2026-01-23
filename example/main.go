@@ -1,71 +1,96 @@
 package main
 
 import (
-	"context"
 	"fmt"
-	"io"
 	"log"
 	"net/http"
-	"time"
+	"os"
 
-	"github.com/pacedotdev/oto/otohttp"
+	"github.com/pacedotdev/virtuous"
 )
 
-//go:generate ./generate.sh
-
-// greeterService implements the generated GreeterService interface.
-type greeterService struct{}
-
-func (greeterService) Greet(ctx context.Context, r GreetRequest) (*GreetResponse, error) {
-	resp := &GreetResponse{
-		Greeting: fmt.Sprintf("Hello, %s.", r.Name),
-	}
-	return resp, nil
-}
-
-func (greeterService) CreateUser(ctx context.Context, r CreateUserRequest) (*CreateUserResponse, error) {
-	user := r.User
-	if user.ID == "" {
-		user.ID = UUID(fmt.Sprintf("user-%d", time.Now().UnixNano()))
-	}
-	if user.Type == "" {
-		user.Type = UserTypeMember
-	}
-	if user.CreatedAt == "" {
-		user.CreatedAt = DateTime(time.Now().UTC().Format(time.RFC3339Nano))
-	}
-	resp := &CreateUserResponse{
-		User:           user,
-		WelcomeMessage: fmt.Sprintf("Welcome, %s!", user.Name),
-	}
-	return resp, nil
-}
-
 func main() {
-	var greeterService greeterService
-	server := otohttp.NewServer()
-	RegisterGreeterService(server, greeterService)
-	http.Handle("/oto/", server)
-	http.HandleFunc("/docs", func(w http.ResponseWriter, r *http.Request) {
+	if err := RunServer(); err != nil {
+		log.Fatal(err)
+	}
+}
+
+func RunServer() error {
+	router := virtuous.NewRouter()
+
+	router.HandleTyped(
+		"GET /api/v1/lookup/states/",
+		virtuous.Wrap(http.HandlerFunc(StatesGetMany), nil, StatesResponse{}, virtuous.HandlerMeta{
+			Service: "States",
+			Method:  "GetMany",
+			Summary: "List all states",
+			Tags:    []string{"states"},
+		}),
+	)
+
+	router.HandleTyped(
+		"GET /api/v1/lookup/states/{code}",
+		virtuous.Wrap(http.HandlerFunc(StateByCode), nil, StateResponse{}, virtuous.HandlerMeta{
+			Service: "States",
+			Method:  "GetByCode",
+			Summary: "Get state by code",
+			Tags:    []string{"states"},
+		}),
+	)
+	router.HandleTyped(
+		"GET /api/v1/secure/states/{code}",
+		virtuous.Wrap(http.HandlerFunc(StateByCodeSecure), nil, StateResponse{}, virtuous.HandlerMeta{
+			Service: "States",
+			Method:  "GetByCodeSecure",
+			Summary: "Get state by code (bearer token required)",
+			Tags:    []string{"states"},
+		}),
+		bearerGuard{},
+	)
+
+	if err := writeOpenAPI(router, "openapi.json"); err != nil {
+		return err
+	}
+	if err := writeClient(router, "client.gen.js"); err != nil {
+		return err
+	}
+
+	mux := http.NewServeMux()
+	mux.Handle("/", router)
+	mux.HandleFunc("GET /docs", func(w http.ResponseWriter, r *http.Request) {
 		http.Redirect(w, r, "/docs/", http.StatusMovedPermanently)
 	})
-	http.HandleFunc("/docs/", func(w http.ResponseWriter, r *http.Request) {
-		http.ServeFile(w, r, "./docs.html")
+	mux.HandleFunc("GET /docs/", func(w http.ResponseWriter, r *http.Request) {
+		http.ServeFile(w, r, "docs.html")
 	})
-	http.HandleFunc("/openapi.yaml", func(w http.ResponseWriter, r *http.Request) {
-		http.ServeFile(w, r, "./openapi.yaml")
+	mux.HandleFunc("GET /openapi.json", func(w http.ResponseWriter, r *http.Request) {
+		http.ServeFile(w, r, "openapi.json")
 	})
-	http.Handle("/", http.FileServer(http.Dir(".")))
-	fmt.Println("listening at http://localhost:8080")
-	log.Fatal(http.ListenAndServe(":8080", nil))
+	mux.HandleFunc("GET /client.gen.js", func(w http.ResponseWriter, r *http.Request) {
+		http.ServeFile(w, r, "client.gen.js")
+	})
+
+	server := &http.Server{
+		Addr:    ":8000",
+		Handler: mux,
+	}
+	fmt.Println("Listening on :8000")
+	return server.ListenAndServe()
 }
 
-// statusCodeHandler is useful for testing the server by returning a
-// specific HTTP status code.
-//  http.Handle("/", statusCodeHandler(http.StatusInternalServerError))
-type statusCodeHandler int
+func writeOpenAPI(router *virtuous.Router, path string) error {
+	data, err := router.OpenAPI()
+	if err != nil {
+		return err
+	}
+	return os.WriteFile(path, data, 0644)
+}
 
-func (c statusCodeHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
-	w.WriteHeader(int(c))
-	io.WriteString(w, http.StatusText(int(c)))
+func writeClient(router *virtuous.Router, path string) error {
+	f, err := os.Create(path)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
+	return router.WriteClientJS(f)
 }

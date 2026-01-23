@@ -1,0 +1,48 @@
+# Virtuous
+
+Virtuous is an agent-first, batteries-included JSON API framework. It provides a typed router that generates OpenAPI and client code at runtime from your handlers.
+
+## Requirements
+- Go 1.22+ (for method-prefixed route patterns like `GET /path`)
+
+## Install
+
+```bash
+go get github.com/pacedotdev/virtuous@v0.0.1
+```
+
+## Quick start
+
+```go
+router := virtuous.NewRouter()
+
+router.HandleTyped(
+	"GET /api/v1/lookup/states/",
+	virtuous.Wrap(http.HandlerFunc(StatesGetMany), nil, StatesResponse{}, virtuous.HandlerMeta{
+		Service: "States",
+		Method:  "GetMany",
+		Summary: "List all states",
+		Tags:    []string{"states"},
+	}),
+)
+
+mux := http.NewServeMux()
+mux.Handle("/", router)
+
+http.ListenAndServe(":8000", mux)
+```
+
+## Runtime outputs
+
+```go
+openapiJSON, err := router.OpenAPI()
+if err != nil {
+	log.Fatal(err)
+}
+_ = os.WriteFile("openapi.json", openapiJSON, 0644)
+
+f, _ := os.Create("client.gen.js")
+_ = router.WriteClientJS(f)
+```
+
+See the root README and `reference/` for a complete example.
