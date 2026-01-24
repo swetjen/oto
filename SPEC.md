@@ -140,7 +140,7 @@ bearer := bearerGuard{}
 // implements Guard interface with Spec()+Middleware()
 
 router.HandleTyped(
-  "POST /oto/GreeterService.Greet",
+  "POST /virtuous/GreeterService.Greet",
   virtuous.Wrap(greetHandler, GreetRequest{}, GreetResponse{}, virtuous.HandlerMeta{
     Service: "GreeterService",
     Method: "Greet",
@@ -149,7 +149,7 @@ router.HandleTyped(
   bearer,
 )
 
-http.Handle("/oto/", router)
+http.Handle("/virtuous/", router)
 http.HandleFunc("/openapi.yaml", func(w http.ResponseWriter, r *http.Request) {
   b, _ := router.OpenAPI()
   w.Write(b)

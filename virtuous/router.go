@@ -202,8 +202,8 @@ func inferMeta(meta HandlerMeta, method, path string) HandlerMeta {
 	if meta.Service != "" && meta.Method != "" {
 		return meta
 	}
-	if strings.HasPrefix(path, "/oto/") {
-		rest := strings.TrimPrefix(path, "/oto/")
+	if strings.HasPrefix(path, "/virtuous/") {
+		rest := strings.TrimPrefix(path, "/virtuous/")
 		parts := strings.Split(rest, ".")
 		if len(parts) == 2 {
 			if meta.Service == "" {

@@ -160,7 +160,7 @@ type openAPISecurityScheme struct {
 	Type   string `json:"type"`
 	In     string `json:"in,omitempty"`
 	Name   string `json:"name,omitempty"`
-	Prefix string `json:"x-otoauth-prefix,omitempty"`
+	Prefix string `json:"x-virtuousauth-prefix,omitempty"`
 }
 
 type openAPIOperation struct {

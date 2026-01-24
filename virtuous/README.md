@@ -32,6 +32,14 @@ mux.Handle("/", router)
 http.ListenAndServe(":8000", mux)
 ```
 
+## Handler metadata
+
+`HandlerMeta` describes how a typed route appears in generated clients and OpenAPI:
+
+- `Service` and `Method` group methods into client services.
+- `Summary` and `Description` show up in OpenAPI and JS JSDoc.
+- `Tags` are emitted as OpenAPI tags.
+
 ## Runtime outputs
 
 ```go
@@ -46,3 +54,7 @@ _ = router.WriteClientJS(f)
 ```
 
 See the root README and `reference/` for a complete example.
+
+## Attribution
+
+Virtuous is informed by prior art from Pace.dev and the Oto project by Matt Ryer.
