@@ -3,9 +3,9 @@ package main
 import "net/http"
 
 type State struct {
-	ID   int32  `json:"id"`
-	Code string `json:"code"`
-	Name string `json:"name"`
+	ID   int32  `json:"id" doc:"Numeric state ID."`
+	Code string `json:"code" doc:"Two-letter state code."`
+	Name string `json:"name" doc:"Display name for the state."`
 }
 
 type StatesResponse struct {

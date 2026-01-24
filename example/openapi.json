@@ -97,13 +97,17 @@
         "type": "object",
         "properties": {
           "code": {
-            "type": "string"
+            "type": "string",
+            "description": "Two-letter state code."
           },
           "id": {
-            "type": "integer"
+            "type": "integer",
+            "format": "int32",
+            "description": "Numeric state ID."
           },
           "name": {
-            "type": "string"
+            "type": "string",
+            "description": "Display name for the state."
           }
         },
         "required": [

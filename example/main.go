@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"os"
 
-	"github.com/pacedotdev/virtuous"
+	"github.com/swetjen/virtuous"
 )
 
 func main() {
@@ -51,7 +51,7 @@ func RunServer() error {
 	if err := writeOpenAPI(router, "openapi.json"); err != nil {
 		return err
 	}
-	if err := writeClient(router, "client.gen.js"); err != nil {
+	if err := router.WriteClientJSFile("client.gen.js"); err != nil {
 		return err
 	}
 
@@ -66,16 +66,18 @@ func RunServer() error {
 	mux.HandleFunc("GET /openapi.json", func(w http.ResponseWriter, r *http.Request) {
 		http.ServeFile(w, r, "openapi.json")
 	})
-	mux.HandleFunc("GET /client.gen.js", func(w http.ResponseWriter, r *http.Request) {
-		http.ServeFile(w, r, "client.gen.js")
-	})
+	mux.HandleFunc("GET /client.gen.js", router.ServeClientJS)
 
 	server := &http.Server{
 		Addr:    ":8000",
 		Handler: mux,
 	}
-	fmt.Println("Listening on :8000")
-	return server.ListenAndServe()
+	if false {
+		fmt.Println("Listening on :8000")
+		return server.ListenAndServe()
+	}
+	fmt.Println("generated client.gen.js")
+	return nil
 }
 
 func writeOpenAPI(router *virtuous.Router, path string) error {
@@ -84,13 +86,4 @@ func writeOpenAPI(router *virtuous.Router, path string) error {
 		return err
 	}
 	return os.WriteFile(path, data, 0644)
-}
-
-func writeClient(router *virtuous.Router, path string) error {
-	f, err := os.Create(path)
-	if err != nil {
-		return err
-	}
-	defer f.Close()
-	return router.WriteClientJS(f)
 }

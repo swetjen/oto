@@ -86,6 +86,6 @@ export function createClient(basepath: string = "/") {
 
 // WriteClientTS writes a runtime-generated TS client to w.
 func (r *Router) WriteClientTS(w io.Writer) error {
-	spec := buildClientSpec(r.Routes())
+	spec := buildClientSpec(r.Routes(), r.typeOverrides)
 	return clientTSTemplate.Execute(w, spec)
 }

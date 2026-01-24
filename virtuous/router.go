@@ -50,9 +50,10 @@ type Route struct {
 
 // Router registers routes and exposes documentation metadata.
 type Router struct {
-	mux    *http.ServeMux
-	routes []Route
-	logger *slog.Logger
+	mux           *http.ServeMux
+	routes        []Route
+	logger        *slog.Logger
+	typeOverrides map[string]TypeOverride
 }
 
 // NewRouter returns a new Router.
@@ -61,6 +62,19 @@ func NewRouter() *Router {
 		mux:    http.NewServeMux(),
 		logger: slog.Default(),
 	}
+}
+
+// SetTypeOverrides replaces the current type overrides used for client and OpenAPI generation.
+func (r *Router) SetTypeOverrides(overrides map[string]TypeOverride) {
+	if overrides == nil {
+		r.typeOverrides = nil
+		return
+	}
+	copyOverrides := make(map[string]TypeOverride, len(overrides))
+	for key, value := range overrides {
+		copyOverrides[key] = value
+	}
+	r.typeOverrides = copyOverrides
 }
 
 // SetLogger overrides the logger used for warnings.

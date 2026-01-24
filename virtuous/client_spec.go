@@ -1,11 +1,13 @@
 package virtuous
 
 import (
+	"reflect"
 	"sort"
 )
 
 type clientSpec struct {
 	Services []clientService
+	Objects  []clientObject
 }
 
 type clientService struct {
@@ -14,17 +16,34 @@ type clientService struct {
 }
 
 type clientMethod struct {
-	Name       string
-	HTTPMethod string
-	Path       string
-	PathParams []string
-	HasBody    bool
-	HasAuth    bool
-	Auth       GuardSpec
+	Name         string
+	Summary      string
+	HTTPMethod   string
+	Path         string
+	PathParams   []string
+	HasBody      bool
+	HasAuth      bool
+	Auth         GuardSpec
+	RequestType  string
+	ResponseType string
 }
 
-func buildClientSpec(routes []Route) clientSpec {
+type clientObject struct {
+	Name   string
+	Fields []clientField
+}
+
+type clientField struct {
+	Name     string
+	Type     string
+	Optional bool
+	Nullable bool
+	Doc      string
+}
+
+func buildClientSpec(routes []Route, overrides map[string]TypeOverride) clientSpec {
 	serviceMap := make(map[string]*clientService)
+	registry := newTypeRegistry(overrides)
 	for _, route := range routes {
 		if route.Handler == nil {
 			continue
@@ -39,13 +58,33 @@ func buildClientSpec(routes []Route) clientSpec {
 			cs = &clientService{Name: service}
 			serviceMap[service] = cs
 		}
-		hasBody := route.Handler.RequestType() != nil
+		reqType := route.Handler.RequestType()
+		respType := route.Handler.ResponseType()
+		hasBody := reqType != nil
+		requestType := ""
+		responseType := ""
+		if reqType != nil {
+			registry.addType(reflect.TypeOf(reqType))
+			requestType = registry.jsType(reflect.TypeOf(reqType))
+		}
+		if respType != nil {
+			respReflect := reflect.TypeOf(respType)
+			if !isNoResponse(respReflect, reflect.TypeOf(NoResponse200{})) &&
+				!isNoResponse(respReflect, reflect.TypeOf(NoResponse204{})) &&
+				!isNoResponse(respReflect, reflect.TypeOf(NoResponse500{})) {
+				registry.addType(respReflect)
+				responseType = registry.jsType(respReflect)
+			}
+		}
 		method := clientMethod{
-			Name:       methodName,
-			HTTPMethod: route.Method,
-			Path:       route.Path,
-			PathParams: route.PathParams,
-			HasBody:    hasBody,
+			Name:         methodName,
+			Summary:      route.Meta.Summary,
+			HTTPMethod:   route.Method,
+			Path:         route.Path,
+			PathParams:   route.PathParams,
+			HasBody:      hasBody,
+			RequestType:  requestType,
+			ResponseType: responseType,
 		}
 		if len(route.Guards) > 0 {
 			method.HasAuth = true
@@ -65,5 +104,8 @@ func buildClientSpec(routes []Route) clientSpec {
 		return services[i].Name < services[j].Name
 	})
 
-	return clientSpec{Services: services}
+	return clientSpec{
+		Services: services,
+		Objects:  registry.objectsList(),
+	}
 }

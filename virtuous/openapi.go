@@ -12,7 +12,7 @@ import (
 // OpenAPI generates an OpenAPI 3.0 document for the registered routes.
 func (r *Router) OpenAPI() ([]byte, error) {
 	routes := r.Routes()
-	gen := newSchemaGen()
+	gen := newSchemaGen(r.typeOverrides)
 	paths := make(map[string]map[string]*openAPIOperation)
 	securitySchemes := make(map[string]openAPISecurityScheme)
 
@@ -198,19 +198,23 @@ type openAPISchema struct {
 	Ref                  string                    `json:"$ref,omitempty"`
 	Type                 string                    `json:"type,omitempty"`
 	Format               string                    `json:"format,omitempty"`
+	Description          string                    `json:"description,omitempty"`
 	Properties           map[string]*openAPISchema `json:"properties,omitempty"`
 	Items                *openAPISchema            `json:"items,omitempty"`
 	AdditionalProperties *openAPISchema            `json:"additionalProperties,omitempty"`
 	Required             []string                  `json:"required,omitempty"`
+	AllOf                []*openAPISchema          `json:"allOf,omitempty"`
 }
 
 type schemaGen struct {
+	overrides  map[string]TypeOverride
 	components map[string]openAPISchema
 	seen       map[reflect.Type]string
 }
 
-func newSchemaGen() *schemaGen {
+func newSchemaGen(overrides map[string]TypeOverride) *schemaGen {
 	return &schemaGen{
+		overrides:  mergeTypeOverrides(overrides),
 		components: map[string]openAPISchema{},
 		seen:       map[reflect.Type]string{},
 	}
@@ -230,6 +234,12 @@ func (g *schemaGen) schemaFor(t reflect.Type) *openAPISchema {
 		return &openAPISchema{Ref: "#/components/schemas/" + name}
 	}
 
+	if g.isOverrideScalar(t) {
+		return g.overrideSchema(t)
+	}
+	if isTimeType(t) {
+		return &openAPISchema{Type: "string", Format: "date-time"}
+	}
 	if t.Kind() == reflect.Struct && t.Name() != "" {
 		name := schemaName(t)
 		g.seen[t] = name
@@ -240,6 +250,35 @@ func (g *schemaGen) schemaFor(t reflect.Type) *openAPISchema {
 	}
 
 	return g.inlineSchema(t)
+}
+
+func (g *schemaGen) isOverrideScalar(t reflect.Type) bool {
+	override, ok := typeOverrideFor(g.overrides, t)
+	if !ok {
+		return false
+	}
+	return override.OpenAPIType != "" || override.OpenAPIFormat != ""
+}
+
+func (g *schemaGen) overrideSchema(t reflect.Type) *openAPISchema {
+	override, ok := typeOverrideFor(g.overrides, t)
+	if !ok {
+		return nil
+	}
+	schema := &openAPISchema{}
+	if override.OpenAPIType != "" {
+		schema.Type = override.OpenAPIType
+	} else if override.OpenAPIFormat != "" {
+		schema.Type = "string"
+	}
+	if override.OpenAPIFormat != "" {
+		schema.Format = override.OpenAPIFormat
+	}
+	return schema
+}
+
+func isTimeType(t reflect.Type) bool {
+	return t.PkgPath() == "time" && t.Name() == "Time"
 }
 
 func (g *schemaGen) structSchema(t reflect.Type) *openAPISchema {
@@ -258,6 +297,17 @@ func (g *schemaGen) structSchema(t reflect.Type) *openAPISchema {
 		if schema == nil {
 			continue
 		}
+		doc := fieldDoc(field)
+		if doc != "" {
+			if schema.Ref != "" {
+				schema = &openAPISchema{
+					AllOf:       []*openAPISchema{{Ref: schema.Ref}},
+					Description: doc,
+				}
+			} else {
+				schema.Description = doc
+			}
+		}
 		props[name] = schema
 		if !omit && field.Type.Kind() != reflect.Ptr {
 			required = append(required, name)
@@ -275,17 +325,24 @@ func (g *schemaGen) inlineSchema(t reflect.Type) *openAPISchema {
 	for t.Kind() == reflect.Ptr {
 		t = t.Elem()
 	}
+	if g.isOverrideScalar(t) {
+		return g.overrideSchema(t)
+	}
 	switch t.Kind() {
 	case reflect.String:
 		return &openAPISchema{Type: "string"}
 	case reflect.Bool:
 		return &openAPISchema{Type: "boolean"}
-	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
-		return &openAPISchema{Type: "integer"}
+	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32:
+		return &openAPISchema{Type: "integer", Format: "int32"}
+	case reflect.Int64:
+		return &openAPISchema{Type: "integer", Format: "int64"}
 	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
 		return &openAPISchema{Type: "integer"}
-	case reflect.Float32, reflect.Float64:
-		return &openAPISchema{Type: "number"}
+	case reflect.Float32:
+		return &openAPISchema{Type: "number", Format: "float"}
+	case reflect.Float64:
+		return &openAPISchema{Type: "number", Format: "double"}
 	case reflect.Slice, reflect.Array:
 		return &openAPISchema{
 			Type:  "array",
@@ -300,34 +357,13 @@ func (g *schemaGen) inlineSchema(t reflect.Type) *openAPISchema {
 			AdditionalProperties: g.schemaFor(t.Elem()),
 		}
 	case reflect.Struct:
-		if t.PkgPath() == "time" && t.Name() == "Time" {
+		if isTimeType(t) {
 			return &openAPISchema{Type: "string", Format: "date-time"}
 		}
 		return g.structSchema(t)
 	default:
 		return &openAPISchema{Type: "string"}
 	}
-}
-
-func jsonFieldName(field reflect.StructField) (string, bool) {
-	tag := field.Tag.Get("json")
-	if tag == "-" {
-		return "", false
-	}
-	if tag != "" {
-		parts := strings.Split(tag, ",")
-		return parts[0], hasOmitEmpty(parts)
-	}
-	return lowerFirst(field.Name), false
-}
-
-func hasOmitEmpty(parts []string) bool {
-	for _, part := range parts[1:] {
-		if part == "omitempty" {
-			return true
-		}
-	}
-	return false
 }
 
 func schemaName(t reflect.Type) string {
